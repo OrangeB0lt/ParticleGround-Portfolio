@@ -76,6 +76,7 @@ h2 {
 h3 {
   text-transform: uppercase;
   font-size: 4.1vw;
+  width: 80vw
   font-weight: 500;
   color: #b3ff00;
   letter-spacing: 0.05em;
