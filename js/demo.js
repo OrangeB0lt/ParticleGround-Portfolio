@@ -1,6 +1,6 @@
 /**
- * Particleground demo
- * @author Jonathan Nicol - @mrjnicol
+ *
+ * @author Jared Ratner - @jratnerd
  */
 
 // This can be used to set the Particles Effects. Check README for more details!
