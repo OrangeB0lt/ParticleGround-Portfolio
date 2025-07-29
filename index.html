@@ -3,35 +3,149 @@
 <head>
   <base target="_blank">
   <meta charset="UTF-8" />
-  <title>Jared Ratner: Devops</title>
+  <title>Jared Ratner: DevOps</title>
   <link rel="shortcut icon" type="image/png" href="assets/favicon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous" type="text/css">
-  <!-- remember, jQuery is completely optional -->
-  <!-- <script type='text/javascript' src='js/jquery-1.11.1.min.js'></script> -->
   <script type="text/javascript" src="js/jquery.particleground.js"></script>
   <script type="text/javascript" src="js/demo.js"></script>
+
+  <style>
+    .resume-section {
+      background-color: rgba(30, 30, 30, 0.95);
+      padding: 4rem 2rem;
+      margin-top: 4rem;
+      color: #f1f1f1;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      border-top: 2px solid #697565;
+      box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .resume-content {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .resume-section h2 {
+      font-size: 2.5rem;
+      color: #ffffff;
+      border-bottom: 2px solid #697565;
+      padding-bottom: 0.5rem;
+    }
+
+    .resume-section h3 {
+      font-size: 1.8rem;
+      margin-top: 2rem;
+      color: #ffffff;
+    }
+
+    .resume-section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .resume-section ul li::before {
+      content: "▹";
+      color: #697565;
+      margin-right: 10px;
+    }
+
+    .resume-section a {
+      color: #b3e5c3;
+      text-decoration: none;
+    }
+
+    .resume-section .job {
+      margin-top: 1.5rem;
+    }
+  </style>
 </head>
 
 <body>
 
 <div id="particles">
   <div id="intro">
-      <h2 style="font-family: 'Syncopate', sans-serif; font-weight: 10;">Jared Ratner&nbsp<a href="resume.pdf" style="color: white; font-size: 8vw"><img src="https://img.icons8.com/ios/100/FFFFFF/open-resume.png" height=7% width=6% style="color: white";></a></h2>
-        <hr style="width: 50%; background-color: #fff6f7; border-color: #ffffff;">
-      <h3 style="font-family: 'Syncopate', sans-serif; font-weight: 500;">Devops / Backend Developer&nbsp</h3>
+    <h2 style="font-family: 'Syncopate', sans-serif; font-weight: 10;">Jared Ratner&nbsp;
+      <a href="resume.pdf" style="color: white; font-size: 8vw">
+        <img src="https://img.icons8.com/ios/100/FFFFFF/open-resume.png" height=7% width=6%>
+      </a>
+    </h2>
+    <hr style="width: 50%; background-color: #fff6f7; border-color: #ffffff;">
+    <h3 style="font-family: 'Syncopate', sans-serif; font-weight: 500;">DevOps / Backend Developer&nbsp;</h3>
     <a href="https://www.linkedin.com/in/jaredratner/" style="color: white;"><i class="fab fa-linkedin" style="font-size: 5vw;"></i></a>
-    &nbsp
-    <a href="mailto: jared@ratner.me?subject=I'm interested in your resume" style="color: white;"><i class="fas fa-paper-plane" style="font-size: 5vw;"></i></a>
-    &nbsp
+    &nbsp;
+    <a href="mailto:jared@ratner.me?subject=I'm interested in your resume" style="color: white;"><i class="fas fa-paper-plane" style="font-size: 5vw;"></i></a>
+    &nbsp;
     <a href="https://github.com/OrangeB0lt/" style="color: white;"><i class="fab fa-github" style="font-size: 5vw;"></i></a>
-    &nbsp
-    
   </div>
-  
 </div>
 
+<section id="resume" class="resume-section">
+  <div class="resume-content">
+    <h2>Resume</h2>
+    <p><strong>Email:</strong> jared.ratner2@gmail.com</p>
+    <p><strong>Phone:</strong> 860-302-6891</p>
+    <p><strong>Location:</strong> Avon, Connecticut</p>
+    <p><strong>Website:</strong> <a href="https://ratner.me">ratner.me</a></p>
+    <p><strong>GitHub:</strong> <a href="https://github.com/OrangeB0lt">OrangeB0lt</a></p>
+
+    <h3>Technical Skills</h3>
+    <ul>
+      <li><strong>Certifications:</strong> CompTIA A+, Holberton Full Stack</li>
+      <li><strong>Languages:</strong> Python, C#, C/C++, Bash, Java, Kotlin, SQL, JS, PHP, HTML, CSS, Ruby</li>
+      <li><strong>Frameworks:</strong> FastAPI, Flask, Django, .NET Core, React, NextJS, Pandas</li>
+      <li><strong>DevOps:</strong> Docker, Terraform, Azure, AWS, Jenkins, SOC2, CI/CD</li>
+      <li><strong>Databases:</strong> PostgreSQL, MongoDB, Redis, MySQL, SQLite</li>
+    </ul>
+
+    <h3>Experience</h3>
+    <div class="job">
+      <strong>Veeder-Root</strong> — DevOps Engineer II (2025–Present)
+      <ul>
+        <li>Automated software version reporting across sister companies</li>
+        <li>Refactored AWS infra with Terraform</li>
+        <li>Deployed Proxmox VE and backups</li>
+        <li>Built secure AWS-hosted document/password manager</li>
+        <li>Replaced legacy Jenkins CI/CD pipeline</li>
+      </ul>
+    </div>
+    <div class="job">
+      <strong>Ancera</strong> — SRE/DevOps (2021–2025)
+      <ul>
+        <li>Led full-stack Azure & on-prem network design</li>
+        <li>Developed patented CRISPR filtering algorithm</li>
+        <li>Created time-saving automation tools (1000+ hours/year)</li>
+        <li>Built Ansible deployment pipelines & CI/CD workflows</li>
+        <li>Managed 30+ contractors and optimized cloud spend</li>
+      </ul>
+    </div>
+    <div class="job">
+      <strong>Bodangly Software</strong> — Software Engineer (2020–2021)
+      <ul>
+        <li>Developed APIs for IoT and Azure Hub</li>
+        <li>Created drivers for nVidia GPU visual processing</li>
+        <li>Built Vue frontend for Litecoin exchange</li>
+      </ul>
+    </div>
+    <div class="job">
+      <strong>V-Technologies</strong> — Software Support Specialist (2018)</li>
+      <ul>
+        <li>Automated API calls and data pipelines for logistics integration</li>
+        <li>Wrote Python scripts and managed SQL/RDS environments</li>
+      </ul>
+    </div>
+    <div class="job">
+      <strong>NPS</strong> — IT Intern (2017)</li>
+      <ul>
+        <li>Handled imaging and hardware setup for medical offices</li>
+      </ul>
+    </div>
+
+    <h3>Education</h3>
+    <p>Holberton School of Software Engineering – Full Stack Software Engineering</p>
+  </div>
+</section>
 
 </body>
 </html>
