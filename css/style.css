@@ -1,170 +1,530 @@
-*{
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 100%;
-  font: inherit;
-  vertical-align: baseline;  
-}
+/* ── RESET ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-article, aside, details, figcaption, figure,
-footer, header, hgroup, menu, nav, section {
-  display: block;
-}
-body {
-  line-height: 1;
-}
-ol, ul {
-  list-style: none;
-}
-blockquote, q {
-  quotes: none;
-}
-blockquote:before, blockquote:after,
-q:before, q:after {
-  content: '';
-  content: none;
-}
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-
-/* particleground demo */
-
-* {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
+/* ── BASE ──────────────────────────────────────────────────────────────────── */
+:root {
+  --c64-blue:     #4040e8;
+  --c64-yellow:   #f5f500;
+  --c64-lblue:    #7c70da;
+  --c64-dark:     #2020a0;
+  --c64-dim:      #5050c8;
+  --c64-white:    #ffffff;
+  --matrix-green: #00ff41;
+  --sw-yellow:    #ffe81f;
+  --font-main:    'Press Start 2P', 'Courier New', monospace;
+  --font-size:    12px;
 }
 
 html, body {
   width: 100%;
   height: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
-body {
-  background: linear-gradient(to bottom right, #123D66, #5050dd);
-  font-family: 'Montserrat', sans-serif;
-  color: #fff;
-  line-height: 1.3;
-  -webkit-font-smoothing: antialiased;
-}
-
-#particles {
-  width: 100%;
-  height: 100%;
+/* ── CRT CONTAINER ─────────────────────────────────────────────────────────── */
+#crt {
+  position: relative;
+  width: min(920px, 98vw);
+  height: min(680px, 96vh);
+  background: var(--c64-blue);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 3px var(--c64-dark),
+    0 0 0 6px #111,
+    0 0 50px rgba(0, 0, 0, 0.9),
+    inset 0 0 120px rgba(0, 0, 0, 0.25);
   overflow: hidden;
+  animation: crt-flicker 9s infinite;
 }
 
-#intro {
+/* ── SCANLINES ─────────────────────────────────────────────────────────────── */
+#scanlines {
   position: absolute;
-  left: 0;
-  top: 50%;
-  padding: 0 10px;
-  width: 100%;
-  text-align: center;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.09) 2px,
+    rgba(0, 0, 0, 0.09) 4px
+  );
 }
-h2 {
-  text-transform: uppercase;
-  font-size: 8vw;
-  font-weight: 120;
-  color: #ffffff;
-  letter-spacing: 0.05em;
-}
-h3 {
-  text-transform: uppercase;
-  font-size: 4.1vw;
-  font-weight: 500;
-  color: #b3ff00;
-  letter-spacing: 0.05em;
-}
-h1::after {
+
+/* vignette */
+#crt::after {
   content: '';
-  width: 80px;
-  display: block;
-  background: #fff;
-  height: 10px;
-  margin: 30px auto;
-  line-height: 1.1;
-}
-p {
-  margin: 0 0 30px 0;
-  font-size: 24px;
-  font-family: 'Roboto', sans-serif;
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.45) 100%);
 }
 
-@media only screen and (max-width: 1000px) {
-  h1 {
-    font-size: 15px;
-  }
+/* ── SCREEN (scrollable content area) ─────────────────────────────────────── */
+#screen {
+  position: absolute;
+  inset: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#screen::-webkit-scrollbar { display: none; }
+
+/* flash transition */
+#screen.flash {
+  animation: screen-flash 0.15s ease-out;
 }
 
-@media only screen and (max-width: 100px) {
-  h1 {
-    font-size: 15px;
-  }
-  h1::after {
-    height: 8px;
-  }
+/* ── TERMINAL (content mount point) ───────────────────────────────────────── */
+#terminal {
+  font-family: var(--font-main);
+  font-size: var(--font-size);
+  color: var(--c64-yellow);
+  line-height: 2;
+  min-height: 100%;
+  word-break: break-word;
 }
 
-@media only screen and (max-width: 100px) {
-  #intro {
-    padding: 0 10px;
-  }
-  h1 {
-    font-size: 15px;
-  }
-  h1::after {
-    height: 6px;
-  }
-  p {
-    font-size: 18px;
-  }
-  .btn {
-    font-size: 16px;
-  }
+/* ── CURSOR ────────────────────────────────────────────────────────────────── */
+.cursor {
+  display: inline-block;
+  width: 0.7em;
+  height: 1em;
+  background: var(--c64-yellow);
+  vertical-align: middle;
+  animation: blink 0.8s step-end infinite;
 }
 
-@media only screen and (max-width: 100px) {
-  h1 {
-    font-size: 15px;
-  }
-  h1::after {
-    height: 4px;
-  }
-}
-/* Style inputs with type="text", select elements and textareas */
-input[type=text], select, textarea {
-  width: 20%; /* Full width */
-  padding: 12px; /* Some padding */ 
-  border: 1px solid #ccc; /* Gray border */
-  border-radius: 4px; /* Rounded borders */
-  box-sizing: border-box; /* Make sure that padding and width stays in place */
-  margin-top: 8px; /* Add a top margin */
-  margin-bottom: 16px; /* Bottom margin */
-  resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
+/* ── EGG INPUT (bottom-left easter egg prompt) ─────────────────────────────── */
+#egg-input {
+  position: absolute;
+  bottom: 12px;
+  left: 15px;
+  z-index: 30;
+  font-family: var(--font-main);
+  font-size: 9px;
+  color: var(--matrix-green);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
 }
 
-/* Style the submit button with a specific background color etc */
-input[type=submit] {
-  background-color: #5e77e6;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 4px;
+/* ── BOOT SEQUENCE ─────────────────────────────────────────────────────────── */
+.boot-hint {
+  color: var(--c64-dim);
+  font-size: 10px;
+}
+
+/* ── MENU ──────────────────────────────────────────────────────────────────── */
+.menu-wrap {
+  padding-top: 10%;
+  text-align: left;
+}
+
+.menu-title {
+  font-size: 18px;
+  color: var(--c64-white);
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.menu-subtitle {
+  font-size: 9px;
+  color: var(--c64-lblue);
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+
+.menu-divider {
+  color: var(--c64-dim);
+  margin-bottom: 24px;
+  font-size: 10px;
+}
+
+.menu-list {
+  margin-bottom: 28px;
+}
+
+.menu-item {
+  font-size: 12px;
+  color: var(--c64-yellow);
+  padding: 5px 0;
   cursor: pointer;
+  user-select: none;
+  transition: color 0.1s;
 }
 
-/* When moving the mouse over the submit button, add a darker green color */
-input[type=submit]:hover {
-  background-color: #45a049;
+.menu-item:hover,
+.menu-item.selected {
+  color: var(--c64-white);
 }
 
-/* Add a background color and some padding around the form */
-.container {
-  border-radius: 5px;
-  padding: 20px;
+.menu-arrow {
+  display: inline-block;
+  width: 1.2em;
+  color: var(--c64-yellow);
+  animation: none;
+}
+
+.menu-item.selected .menu-arrow {
+  color: var(--c64-white);
+  animation: blink 0.7s step-end infinite;
+}
+
+.menu-hint {
+  font-size: 8px;
+  color: var(--c64-dim);
+}
+
+/* ── PROMPT / CMD LINE ─────────────────────────────────────────────────────── */
+.cmd-line {
+  margin-bottom: 4px;
+  color: var(--c64-yellow);
+}
+
+.prompt {
+  color: var(--c64-lblue);
+}
+
+/* ── SECTION CONTENT ───────────────────────────────────────────────────────── */
+.section-content {
+  padding-top: 4px;
+  line-height: 2;
+}
+
+.section-header {
+  color: var(--c64-white);
+  font-size: 11px;
+}
+
+.section-divider {
+  color: var(--c64-dim);
+}
+
+.hint-text {
+  color: var(--c64-dim);
+  font-size: 9px;
+}
+
+.dim-text {
+  color: var(--c64-dim);
+}
+
+.back-hint {
+  font-size: 8px;
+  color: var(--c64-dim);
+  margin-top: 12px;
+  border-top: 1px solid var(--c64-dark);
+  padding-top: 8px;
+}
+
+/* ── LINKS ─────────────────────────────────────────────────────────────────── */
+a {
+  color: var(--matrix-green);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--c64-white);
+  text-decoration: underline;
+}
+
+.ok-text {
+  color: var(--matrix-green);
+}
+
+.launch-msg {
+  color: var(--c64-yellow);
+}
+
+/* ── SKILLS ────────────────────────────────────────────────────────────────── */
+.skill-cat {
+  color: var(--c64-white);
+  font-size: 10px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.skill-row {
+  font-size: 10px;
+  margin: 3px 0;
+  white-space: pre;
+}
+
+.skill-label {
+  color: var(--c64-yellow);
+}
+
+.skill-bar-outer {
+  color: var(--c64-dim);
+}
+
+.skill-bar-inner {
+  color: var(--c64-yellow);
+}
+
+.skill-bar-empty {
+  color: var(--c64-dark);
+}
+
+.skill-pct {
+  color: var(--c64-lblue);
+}
+
+/* ── PROJECTS ──────────────────────────────────────────────────────────────── */
+.ls-header {
+  color: var(--c64-dim);
+  font-size: 9px;
+}
+
+.project-row {
+  font-size: 9px;
+  padding: 3px 0;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-row:hover,
+.project-row.selected {
+  color: var(--c64-white);
+}
+
+.proj-arrow {
+  display: inline-block;
+  width: 1.2em;
+  color: var(--c64-yellow);
+}
+
+.project-row.selected .proj-arrow {
+  animation: blink 0.7s step-end infinite;
+  color: var(--c64-white);
+}
+
+.proj-perms { color: var(--c64-dim); }
+.proj-name  { color: var(--c64-white); }
+.proj-desc  { color: var(--c64-lblue); }
+
+.project-expanded {
+  font-size: 9px;
+  color: var(--c64-lblue);
+  padding-left: 1.2em;
+  line-height: 2;
+  white-space: normal;
+}
+
+.project-expanded a { color: var(--matrix-green); }
+
+/* ── CONTACT / WHOIS ───────────────────────────────────────────────────────── */
+.whois-row {
+  font-size: 10px;
+  margin: 2px 0;
+}
+
+.whois-label {
+  color: var(--c64-lblue);
+  white-space: pre;
+}
+
+.status-available {
+  color: var(--matrix-green);
+}
+
+/* ── MAN PAGE ──────────────────────────────────────────────────────────────── */
+.man-page {
+  font-size: 10px;
+}
+
+.man-header,
+.man-footer {
+  color: var(--c64-lblue);
+  font-size: 9px;
+}
+
+.man-section {
+  color: var(--c64-white);
+  margin-top: 8px;
+  margin-bottom: 2px;
+  font-size: 10px;
+}
+
+.man-body {
+  color: var(--c64-yellow);
+  padding-left: 0;
+  line-height: 2.2;
+}
+
+/* ── EASTER EGG OVERLAY ────────────────────────────────────────────────────── */
+.egg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  font-family: var(--font-main);
+  font-size: 12px;
+}
+
+.egg-text {
+  font-family: var(--font-main);
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+
+.hack-text {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.lolcow-text {
+  color: var(--c64-yellow);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+/* ── STAR WARS CRAWL ───────────────────────────────────────────────────────── */
+.sw-crawl-wrap {
+  position: absolute;
+  inset: 0;
+  perspective: 350px;
+  overflow: hidden;
+  background: #000;
+}
+
+.sw-crawl {
+  position: absolute;
+  bottom: 0;
+  left: 8%;
+  right: 8%;
+  text-align: center;
+  color: var(--sw-yellow);
+  font-family: var(--font-main);
+  font-size: 11px;
+  line-height: 2.2;
+  transform-origin: 50% 100%;
+  animation: sw-scroll 32s linear forwards;
+}
+
+.sw-logo {
+  color: var(--c64-lblue);
+  font-size: 9px;
+  margin-bottom: 16px;
+}
+
+.sw-title {
+  font-size: 16px;
+  color: var(--sw-yellow);
+  margin-bottom: 8px;
+}
+
+.sw-episode {
+  font-size: 10px;
+  color: var(--c64-white);
+}
+
+.sw-body {
+  font-size: 10px;
+  line-height: 2.4;
+}
+
+/* ── ANIMATIONS ────────────────────────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes crt-flicker {
+  0%   { opacity: 1; }
+  90%  { opacity: 1; }
+  91%  { opacity: 0.97; }
+  92%  { opacity: 1; }
+  95%  { opacity: 0.96; }
+  96%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@keyframes screen-flash {
+  0%   { opacity: 1; }
+  40%  { opacity: 0.05; }
+  100% { opacity: 1; }
+}
+
+@keyframes sw-scroll {
+  0%   { transform: rotateX(22deg) translateY(100vh); }
+  100% { transform: rotateX(22deg) translateY(-3200px); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── RESUME SECTION ────────────────────────────────────────────────────────── */
+.resume-content {
+  font-size: 10px;
+  line-height: 2.2;
+}
+
+.resume-section-head {
+  color: var(--c64-white);
+  font-size: 10px;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--c64-dark);
+  padding-bottom: 4px;
+}
+
+.resume-job-title {
+  color: var(--c64-lblue);
+  margin-top: 8px;
+}
+
+.resume-bullet {
+  color: var(--c64-yellow);
+  padding-left: 1em;
+}
+
+.resume-bullet::before {
+  content: '• ';
+  color: var(--c64-dim);
+}
+
+/* ── RESPONSIVE ────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #crt {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  html, body {
+    background: var(--c64-blue);
+  }
+
+  .menu-title { font-size: 13px; }
+  .menu-item  { font-size: 11px; }
+}
+
+@media (max-width: 480px) {
+  :root { --font-size: 10px; }
+
+  #screen { inset: 12px; }
+
+  .menu-title    { font-size: 11px; }
+  .menu-item     { font-size: 10px; }
+  .menu-subtitle { font-size: 8px; }
+  .menu-hint     { display: none; }
+
+  #egg-input { font-size: 8px; }
+
+  .sw-crawl { font-size: 9px; }
+  .sw-title { font-size: 12px; }
 }
