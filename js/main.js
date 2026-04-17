@@ -78,7 +78,7 @@ const PROJECTS = [
   },
 ];
 
-const EGG_COMMANDS = new Set(['matrix', 'starwars', 'startrek', 'lolcow', 'nyan', 'sudo', 'hack', 'help']);
+const EGG_COMMANDS = new Set(['matrix', 'starwars', 'startrek', 'cowsay', 'nyan', 'sudo', 'hack', 'help']);
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 
@@ -551,7 +551,7 @@ function sectionManJared() {
       <div class="man-body">&nbsp;&nbsp;&nbsp;&nbsp;Occasionally over-engineers solutions.</div>
       <div class="man-body">&nbsp;&nbsp;&nbsp;&nbsp;Known to write Terraform for personal projects.</div>
       <div class="man-body">&nbsp;&nbsp;&nbsp;&nbsp;Will refactor working code "just to clean it up."</div>
-      <div class="man-body">&nbsp;&nbsp;&nbsp;&nbsp;SEE ALSO: lolcow easter egg (try typing 'lolcow')</div><br>
+      <div class="man-body">&nbsp;&nbsp;&nbsp;&nbsp;SEE ALSO: cowsay easter egg (try typing 'cowsay')</div><br>
       <div class="man-section">SEE ALSO</div>
       <div class="man-body">&nbsp;&nbsp;&nbsp;&nbsp;<a href="${LINKEDIN_URL}" target="_blank" rel="noopener">linkedin(1)</a>,&nbsp; <a href="${GITHUB_URL}" target="_blank" rel="noopener">github(1)</a>,&nbsp; resume(1)</div><br>
       <div class="man-footer">JARED(1)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;User Commands&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JARED(1)</div><br>
@@ -827,7 +827,7 @@ function runEgg(cmd) {
     case 'matrix':   eggMatrix();   break;
     case 'starwars': eggStarWars(); break;
     case 'startrek': eggStarTrek(); break;
-    case 'lolcow':   eggLolcow();   break;
+    case 'cowsay':   eggCowsay();   break;
     case 'nyan':     eggNyan();     break;
     case 'sudo':     eggSudo();     break;
     case 'hack':     eggHack();     break;
@@ -1096,9 +1096,9 @@ function eggStarTrek() {
   }, 2500);
 }
 
-// ── LOLCOW ───────────────────────────────────────────────────────────────────
+// ── COWSAY ───────────────────────────────────────────────────────────────────
 
-function eggLolcow() {
+function eggCowsay() {
   const ov = makeOverlay('#000');
   ov.style.display = 'flex';
   ov.style.alignItems = 'center';
@@ -1131,7 +1131,7 @@ function eggLolcow() {
   ].join('\n');
 
   const pre = document.createElement('pre');
-  pre.className = 'lolcow-text';
+  pre.className = 'cowsay-text';
   pre.textContent = bubble + '\n' + cow;
   ov.appendChild(pre);
 
@@ -1359,7 +1359,7 @@ function eggHelp() {
     <span style="color:#00ff41">matrix</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Full-screen Matrix rain (10s or any key)
     <span style="color:#00ff41">starwars</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ASCII Star Wars opening crawl
     <span style="color:#00ff41">startrek</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Warp jump + Captain's Log
-    <span style="color:#00ff41">lolcow</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ASCII cow with random DevOps fortune
+    <span style="color:#00ff41">cowsay</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ASCII cow with random DevOps fortune
     <span style="color:#00ff41">nyan</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nyan cat animation (8s or any key)
     <span style="color:#00ff41">sudo</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Try to escalate privileges
     <span style="color:#00ff41">hack</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hollywood hacking sequence
