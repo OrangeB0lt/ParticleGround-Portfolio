@@ -763,6 +763,7 @@ a:hover {
   #crt {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     border-radius: 0;
     box-shadow: none;
   }
@@ -773,12 +774,29 @@ a:hover {
 
   .menu-title { font-size: 13px; }
   .menu-item  { font-size: 11px; }
+
+  #egg-input {
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  #esc-btn {
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
+  }
+
+  /* give screen breathing room above the egg prompt */
+  #screen {
+    padding-bottom: 36px;
+  }
 }
 
 @media (max-width: 480px) {
   :root { --font-size: 10px; }
 
-  #screen { inset: 12px; }
+  #screen {
+    inset: 12px;
+    padding-bottom: 40px;
+  }
 
   .menu-title    { font-size: 11px; }
   .menu-item     { font-size: 10px; }
@@ -786,6 +804,20 @@ a:hover {
   .menu-hint     { display: none; }
 
   #egg-input { font-size: 8px; }
+
+  /* prevent skill bars from overflowing narrow screens */
+  .skill-row {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* sim-browser nearly full-screen on small devices */
+  .sim-browser {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
 
   .sw-crawl { font-size: 9px; }
   .sw-title { font-size: 12px; }
