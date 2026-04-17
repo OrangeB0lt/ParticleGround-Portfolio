@@ -156,7 +156,7 @@ describe('EGG_COMMANDS', () => {
   });
 
   it('contains all expected commands', () => {
-    for (const cmd of ['matrix', 'starwars', 'lolcow', 'nyan', 'sudo', 'hack', 'help']) {
+    for (const cmd of ['matrix', 'starwars', 'cowsay', 'nyan', 'sudo', 'hack', 'help']) {
       assert.ok(EGG_COMMANDS.has(cmd), `Missing command: "${cmd}"`);
     }
   });
