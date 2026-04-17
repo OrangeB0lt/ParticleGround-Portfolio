@@ -1,0 +1,53 @@
+# Jared Ratner
+
+> DevOps / SRE / Backend Engineer based in Boston, MA. Infrastructure automation, cloud platforms, and backend systems.
+
+Jared Ratner is a software and infrastructure engineer with experience across the full DevOps lifecycle: CI/CD pipelines, cloud cost optimization, container orchestration, observability, and backend API development. He currently works as a DevOps Engineer at Veeder-Root, where he led a full GitHub migration from SVN and Bitbucket, rebuilt Jenkins infrastructure as code using JCasC and Terraform, and reduced build times by 78%. Previously at Ancera as an SRE/DevOps Engineer, he maintained production-grade Kubernetes clusters for AI-powered applications, automated infrastructure provisioning with Ansible and Terraform, and saved over $50K annually through Azure cost optimization.
+
+## Contact & Profiles
+
+- [Portfolio](https://ratner.me): Interactive terminal-style portfolio site
+- [GitHub](https://github.com/OrangeB0lt): Open-source projects and code
+- [LinkedIn](https://www.linkedin.com/in/jaredratner/): Professional history and endorsements
+- [Resume (PDF)](https://ratner.me/resume.pdf): Full CV with work history and skills
+- Email: jared.ratner2@gmail.com
+
+## Technical Skills
+
+- [Portfolio Skills Section](https://ratner.me): Full breakdown available on site
+- Cloud Platforms: Azure (primary), AWS, GCP
+- CI/CD: Azure DevOps, GitHub Actions, Jenkins, Docker, Kubernetes, Docker Swarm
+- Infrastructure as Code: Terraform, Ansible, Helm Charts, Docker Compose
+- Programming: Python, C#, Bash/Shell, Java, Kotlin, JavaScript
+- Databases: PostgreSQL, MySQL, SQLite, MongoDB, Azure SQL
+- Monitoring: Prometheus, Grafana, Azure Monitor
+- Networking: TCP/IP, DNS, VPN, Firewall configuration
+- OS: Linux (Ubuntu, CentOS, Fedora, Rocky Linux), Windows Server, macOS
+- Version Control: Git, GitHub, GitLab, Azure DevOps Repos
+- Frameworks: .NET Core, Django, Flask, FastAPI
+
+## Work History
+
+- DevOps Engineer, Veeder-Root — Simsbury/Remote, CT (2025–present)
+- SRE / DevOps Engineer, Ancera — Branford/Remote, CT (2021–2025)
+- Software Engineer, Bodangly Software — New Haven/Remote, CT (2020–2021)
+- Software Support Specialist, V-Technologies — Cheshire, CT (2018)
+- IT Technical Intern, National Physician Services — Rocky Hill, CT (2017)
+- Network Administrator / Web Designer, Ben and Jerry's — Canton, CT (2015–2016)
+- ITS Help Desk, Eastern Connecticut State University — Willimantic, CT (2014–2015)
+
+## Education
+
+- Holberton School of Software Engineering, New Haven, CT — Full Stack Software Engineering
+
+## Projects
+
+- [S.P.A.C.E.](https://github.com/OrangeB0lt/S.P.A.C.E.): Browser-based tower defense game built with Phaser 3 (JavaScript, HTML5 Canvas)
+- [generic-app-docker](https://github.com/OrangeB0lt/generic-app-docker): Production-ready full-stack Docker Compose starter (FastAPI, React, PostgreSQL)
+- [ollama-api-local](https://github.com/OrangeB0lt/ollama-api-local): Local API bridge for on-prem Ollama LLM inference — no cloud, no telemetry
+- [monty](https://github.com/OrangeB0lt/monty): Stack/queue-based Monty bytecode interpreter written in C
+- [ParticleGround-Portfolio](https://github.com/OrangeB0lt/ParticleGround-Portfolio): This site — Commodore 64-themed terminal portfolio in vanilla JS/CSS/HTML
+
+## Optional
+
+- [Medium](https://medium.com/@jared.ratner2): Technical writing and engineering articles
