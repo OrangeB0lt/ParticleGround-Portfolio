@@ -118,7 +118,7 @@ describe('handleEggKey() — Escape', () => {
   beforeEach(resetState);
 
   it('clears buffer on Escape', () => {
-    'lolcow'.split('').forEach(c => handleEggKey(c));
+    'cowsay'.split('').forEach(c => handleEggKey(c));
     handleEggKey('Escape');
     assert.strictEqual(state.eggBuffer, '');
   });
@@ -135,7 +135,7 @@ describe('handleEggKey() — Escape', () => {
 describe('handleEggKey() — Enter (recognised command)', () => {
   beforeEach(resetState);
 
-  for (const cmd of ['matrix', 'starwars', 'lolcow', 'nyan', 'sudo', 'hack', 'help']) {
+  for (const cmd of ['matrix', 'starwars', 'cowsay', 'nyan', 'sudo', 'hack', 'help']) {
     it(`"${cmd}" sets state.mode to easter and clears buffer`, () => {
       cmd.split('').forEach(c => handleEggKey(c));
       assert.strictEqual(state.eggBuffer, cmd);
@@ -197,7 +197,7 @@ describe('handleEggKey() — easter mode guard', () => {
 // ── EGG_COMMANDS set membership ───────────────────────────────────────────────
 
 describe('EGG_COMMANDS set membership', () => {
-  const expectedCmds = ['matrix', 'starwars', 'lolcow', 'nyan', 'sudo', 'hack', 'help'];
+  const expectedCmds = ['matrix', 'starwars', 'cowsay', 'nyan', 'sudo', 'hack', 'help'];
 
   it('every expected command is recognised', () => {
     for (const cmd of expectedCmds) {
