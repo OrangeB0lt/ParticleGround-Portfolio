@@ -760,33 +760,39 @@ a:hover {
 
 /* ── RESPONSIVE ────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  html, body {
+    background: var(--c64-blue);
+    height: 100%;
+    height: 100svh;
+  }
+
   #crt {
     width: 100vw;
     height: 100vh;
     height: 100dvh;
+    height: 100svh;
     border-radius: 0;
     box-shadow: none;
-  }
-
-  html, body {
-    background: var(--c64-blue);
   }
 
   .menu-title { font-size: 13px; }
   .menu-item  { font-size: 11px; }
 
+  /* fixed escapes overflow:hidden on #crt and anchors to visual viewport */
   #egg-input {
+    position: fixed;
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    left: 15px;
   }
 
   #esc-btn {
+    position: fixed;
     top: calc(16px + env(safe-area-inset-top, 0px));
     right: calc(16px + env(safe-area-inset-right, 0px));
   }
 
-  /* give screen breathing room above the egg prompt */
   #screen {
-    padding-bottom: 36px;
+    padding-bottom: 40px;
   }
 }
 
