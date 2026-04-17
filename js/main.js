@@ -569,7 +569,7 @@ function sectionResume() {
     <div class="section-content resume-content">
       <div class="section-header">---===[ RESUME.TXT ]===---</div><br>
       <div>JARED RATNER</div>
-      <div class="dim-text">jared.ratner2@gmail.com &nbsp;|&nbsp; ratner.me &nbsp;|&nbsp; Avon, CT</div>
+      <div class="dim-text">jared.ratner2@gmail.com &nbsp;|&nbsp; ratner.me &nbsp;|&nbsp; Boston, MA</div>
       <div class="dim-text"><a href="${GITHUB_URL}" target="_blank" rel="noopener">github.com/OrangeB0lt</a> &nbsp;|&nbsp; <a href="${LINKEDIN_URL}" target="_blank" rel="noopener">linkedin.com/in/jaredratner</a></div>
       <br>
 
@@ -1442,6 +1442,21 @@ document.addEventListener('keydown', e => {
 // skip boot on click anywhere
 document.addEventListener('click', () => {
   if (state.mode === 'boot') state.bootAborted = true;
+});
+
+// intercept all external links → simulated browser
+document.addEventListener('click', e => {
+  if (e.target.closest('#sim-browser')) return;
+  const anchor = e.target.closest('a');
+  if (!anchor) return;
+  const href = anchor.getAttribute('href');
+  if (!href || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+  if (!href.startsWith('http://') && !href.startsWith('https://')) return;
+  e.preventDefault();
+  const rawText = anchor.textContent.trim().replace(/[\[\]\u2192\u2190<>]/g, '').trim();
+  const isRawUrl = /^https?:\/\/|^www\./.test(rawText);
+  const name = (rawText && !isRawUrl) ? rawText.toUpperCase() : new URL(href).hostname.toUpperCase();
+  launchExternal(name, href);
 });
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
