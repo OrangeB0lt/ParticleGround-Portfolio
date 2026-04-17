@@ -78,12 +78,12 @@ const PROJECTS = [
   },
 ];
 
-const EGG_COMMANDS = new Set(['matrix', 'starwars', 'lolcow', 'nyan', 'sudo', 'hack', 'help']);
+const EGG_COMMANDS = new Set(['matrix', 'starwars', 'startrek', 'lolcow', 'nyan', 'sudo', 'hack', 'help']);
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 
 const state = {
-  mode: 'boot',       // 'boot' | 'menu' | 'section' | 'projects' | 'easter'
+  mode: 'boot',       // 'boot' | 'menu' | 'section' | 'projects' | 'easter' | 'browser'
   bootAborted: false,
   menuIndex: 0,
   projectIndex: 0,
@@ -100,6 +100,8 @@ const state = {
 const $terminal = document.getElementById('terminal');
 const $screen   = document.getElementById('screen');
 const $eggInput = document.getElementById('egg-input');
+const $escBtn   = document.getElementById('esc-btn');
+$escBtn.addEventListener('click', () => backToMenu());
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
 
@@ -207,7 +209,9 @@ function renderMenu() {
   state.mode = 'menu';
   state.skillsActive = false;
   state.expandedProject = null;
+  $escBtn.classList.remove('visible');
   $terminal.innerHTML = '';
+  updateEggDisplay();
 
   const wrap = document.createElement('div');
   wrap.className = 'menu-wrap';
@@ -273,16 +277,18 @@ async function showSection(name) {
   cmdLine.appendChild(cmdSpan);
   await typeText(cmdSpan, SECTION_CMDS[name] || name, 40);
   await delay(180);
+  $escBtn.classList.add('visible');
   appendHTML($terminal, '', '');
 
   switch (name) {
-    case 'about':    sectionAbout();    break;
-    case 'skills':   sectionSkills();   break;
-    case 'projects': sectionProjects(); break;
-    case 'contact':  sectionContact();  break;
-    case 'manjared': sectionManJared(); break;
-    case 'resume':   sectionResume();   break;
+    case 'about':    sectionAbout();          break;
+    case 'skills':   sectionSkills();         break;
+    case 'projects': sectionProjects();       break;
+    case 'contact':  await sectionContact();  break;
+    case 'manjared': sectionManJared();       break;
+    case 'resume':   sectionResume();         break;
   }
+  $screen.scrollTop = 0;
 }
 
 function backToMenu() {
@@ -333,18 +339,18 @@ function sectionSkills() {
 
   const skillGroups = [
     { cat: 'INFRASTRUCTURE', items: [
-      { name: 'AWS',        pct: 90 },
-      { name: 'Kubernetes', pct: 85 },
+      { name: 'AWS',        pct: 96 },
+      { name: 'Kubernetes', pct: 75 },
       { name: 'Terraform',  pct: 85 },
-      { name: 'Azure',      pct: 75 },
+      { name: 'Azure',      pct: 95 },
       { name: 'Ansible',    pct: 70 },
       { name: 'Docker',     pct: 90 },
     ]},
     { cat: 'BACKEND', items: [
       { name: 'Python',     pct: 90 },
-      { name: 'Bash',       pct: 85 },
+      { name: 'Bash',       pct: 95 },
       { name: 'C#/.NET',    pct: 75 },
-      { name: 'Go',         pct: 65 },
+      { name: 'Go',         pct: 60 },
       { name: 'SQL',        pct: 70 },
     ]},
     { cat: 'OBSERVABILITY', items: [
@@ -355,7 +361,7 @@ function sectionSkills() {
     { cat: 'CI/CD', items: [
       { name: 'GitHub Actions', pct: 90 },
       { name: 'ArgoCD',         pct: 75 },
-      { name: 'Jenkins',        pct: 70 },
+      { name: 'Jenkins',        pct: 100 },
     ]},
   ];
 
@@ -622,37 +628,152 @@ function sectionResume() {
 
 // ── EXTERNAL LINKS ───────────────────────────────────────────────────────────
 
-async function launchExternal(name, url) {
-  await flashClear();
-  state.mode = 'section';
+function launchExternal(name, url) {
+  state.prevMode = state.mode;
+  state.mode = 'browser';
+  $escBtn.classList.remove('visible');
+  updateEggDisplay();
+  showBrowser(name, url);
+}
 
-  const c = document.createElement('div');
-  c.className = 'section-content';
-  $terminal.appendChild(c);
+function showBrowser(name, url) {
+  const host = new URL(url).hostname;
+  const browser = document.createElement('div');
+  browser.className = 'sim-browser';
+  browser.id = 'sim-browser';
 
-  const msg = document.createElement('div');
-  msg.className = 'launch-msg';
-  c.appendChild(msg);
+  // Title bar
+  const titlebar = document.createElement('div');
+  titlebar.className = 'sim-browser-titlebar';
+  const winctrls = document.createElement('span');
+  winctrls.className = 'sim-browser-winctrls';
+  winctrls.textContent = '[\u25fc][\u25fb]';
+  const title = document.createElement('div');
+  title.className = 'sim-browser-title';
+  title.textContent = `NETSCAPE C64 \u2014 ${name}`;
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'sim-browser-close';
+  closeBtn.textContent = '[X]';
+  closeBtn.addEventListener('click', closeBrowser);
+  titlebar.append(winctrls, title, closeBtn);
 
-  await typeText(msg, `Launching external terminal: ${name}...`, 35);
-  await new Promise(r => setTimeout(r, 300));
-  msg.innerHTML += ' <span class="ok-text">[OK]</span>';
+  // URL bar
+  const urlbar = document.createElement('div');
+  urlbar.className = 'sim-browser-urlbar';
+  const nav = document.createElement('span');
+  nav.className = 'sim-browser-nav';
+  nav.textContent = '[<] [>] [\u21ba]';
+  const urlDisplay = document.createElement('div');
+  urlDisplay.className = 'sim-browser-url';
+  urlDisplay.textContent = url;
+  urlbar.append(nav, urlDisplay);
 
-  window.open(url, '_blank', 'noopener');
-  await new Promise(r => setTimeout(r, 2000));
-  renderMenu();
+  // Body
+  const body = document.createElement('div');
+  body.className = 'sim-browser-body';
+
+  const loadOverlay = document.createElement('div');
+  loadOverlay.className = 'sim-browser-loading';
+  const loadText = document.createElement('div');
+  loadText.className = 'sim-browser-load-text';
+  loadText.textContent = `RENDERING ${host.toUpperCase()}...`;
+  const loadSub = document.createElement('div');
+  loadSub.className = 'sim-browser-load-sub';
+  loadSub.textContent = 'Capturing screenshot — may take a moment';
+  loadOverlay.append(loadText, loadSub);
+  body.appendChild(loadOverlay);
+
+  // Status bar
+  const statusbar = document.createElement('div');
+  statusbar.className = 'sim-browser-statusbar';
+  const statusEl = document.createElement('span');
+  statusEl.className = 'sim-browser-status';
+  statusEl.textContent = 'LOADING...';
+  const newTab = document.createElement('a');
+  newTab.className = 'sim-browser-newtab';
+  newTab.href = url;
+  newTab.target = '_blank';
+  newTab.rel = 'noopener';
+  newTab.textContent = '[OPEN IN NEW TAB]';
+  statusbar.append(statusEl, newTab);
+
+  browser.append(titlebar, urlbar, body, statusbar);
+  document.getElementById('crt').appendChild(browser);
+
+  // Load screenshot — use local asset for sites that require auth, Microlink otherwise
+  const LOCAL_SCREENSHOTS = {
+    'www.linkedin.com': 'assets/linkedin.png',
+  };
+  const screenshotUrl = LOCAL_SCREENSHOTS[host]
+    || `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+  const img = document.createElement('img');
+  img.className = 'sim-browser-screenshot';
+  img.src = screenshotUrl;
+  img.alt = name;
+  img.title = `Click to open ${host} in a new tab`;
+  body.appendChild(img);
+
+  const timeout = setTimeout(() => {
+    loadOverlay.remove();
+    img.remove();
+    showBlockedScreen(body, host, url, statusEl);
+  }, 25000);
+
+  img.addEventListener('load', () => {
+    clearTimeout(timeout);
+    loadOverlay.remove();
+    img.style.opacity = '1';
+    statusEl.textContent = 'CLICK TO OPEN';
+  });
+
+  img.addEventListener('error', () => {
+    clearTimeout(timeout);
+    loadOverlay.remove();
+    img.remove();
+    showBlockedScreen(body, host, url, statusEl);
+  });
+
+  img.addEventListener('click', () => window.open(url, '_blank', 'noopener'));
+}
+
+function showBlockedScreen(body, host, url, statusEl) {
+  statusEl.textContent = 'ERR_SCREENSHOT_FAILED';
+  const blocked = document.createElement('div');
+  blocked.className = 'sim-browser-blocked';
+  blocked.innerHTML =
+    '<div class="sim-browser-blocked-title">RENDER FAILED</div>' +
+    `<div class="sim-browser-blocked-host">${host}</div>` +
+    '<div class="sim-browser-blocked-err">ERR_SCREENSHOT_UNAVAILABLE</div>' +
+    '<div class="sim-browser-blocked-info">Could not capture page screenshot.</div>' +
+    `<a href="${url}" target="_blank" rel="noopener" class="sim-browser-blocked-link">[ OPEN IN NEW TAB &rarr; ]</a>`;
+  body.appendChild(blocked);
+}
+
+function closeBrowser() {
+  const browser = document.getElementById('sim-browser');
+  if (!browser) return;
+  browser.style.transition = 'opacity 0.15s';
+  browser.style.opacity = '0';
+  setTimeout(() => {
+    browser.remove();
+    state.mode = state.prevMode || 'menu';
+    if (!$terminal.querySelector('.menu-wrap')) renderMenu();
+    updateEggDisplay();
+  }, 150);
 }
 
 // ── EASTER EGG INPUT SYSTEM ───────────────────────────────────────────────────
 
 function updateEggDisplay() {
-  if (state.eggBuffer) {
-    $eggInput.textContent = '$_ ' + state.eggBuffer;
-    $eggInput.style.opacity = '1';
-  } else {
-    $eggInput.textContent = '';
+  if (state.mode === 'boot' || state.mode === 'easter' || state.mode === 'browser') {
     $eggInput.style.opacity = '0';
+    return;
   }
+  $eggInput.textContent = `jared@ratner.me:~$\u00a0${state.eggBuffer}`;
+  const cur = document.createElement('span');
+  cur.className = 'egg-cursor';
+  $eggInput.appendChild(cur);
+  $eggInput.style.opacity = '1';
 }
 
 function clearEgg() {
@@ -705,6 +826,7 @@ function runEgg(cmd) {
   switch (cmd) {
     case 'matrix':   eggMatrix();   break;
     case 'starwars': eggStarWars(); break;
+    case 'startrek': eggStarTrek(); break;
     case 'lolcow':   eggLolcow();   break;
     case 'nyan':     eggNyan();     break;
     case 'sudo':     eggSudo();     break;
@@ -725,6 +847,7 @@ function makeOverlay(bg) {
 function removeOverlay() {
   if (state.eggOverlay) { state.eggOverlay.remove(); state.eggOverlay = null; }
   state.mode = state.prevMode || 'menu';
+  updateEggDisplay();
 }
 
 function onceKeyDismiss(ov, cb) {
@@ -841,6 +964,136 @@ function eggStarWars() {
   const keyHandler = e => { e.stopPropagation(); stop(); };
   document.addEventListener('keydown', keyHandler, true);
   crawl.addEventListener('animationend', stop);
+}
+
+// ── STAR TREK ────────────────────────────────────────────────────────────────
+
+function eggStarTrek() {
+  const ov = makeOverlay('#000');
+  ov.style.overflow = 'hidden';
+
+  let warpInterval = null;
+  let phaseTimer   = null;
+  let done         = false;
+
+  const stop = () => {
+    if (done) return;
+    done = true;
+    clearInterval(warpInterval);
+    clearTimeout(phaseTimer);
+    document.removeEventListener('keydown', keyHandler, true);
+    ov.style.transition = 'opacity 0.3s';
+    ov.style.opacity = '0';
+    setTimeout(removeOverlay, 300);
+  };
+  const keyHandler = e => { e.stopPropagation(); stop(); };
+  document.addEventListener('keydown', keyHandler, true);
+
+  // ── Phase 1: warp jump ──────────────────────────────────────────
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:absolute;inset:0;';
+  ov.appendChild(canvas);
+
+  const crt = document.getElementById('crt');
+  const W = crt.clientWidth;
+  const H = crt.clientHeight;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const newStar = () => {
+    const angle = Math.random() * Math.PI * 2;
+    return { angle, dist: Math.random() * 15 + 3, speed: 2 + Math.random() * 5 };
+  };
+  const stars = Array.from({ length: 220 }, newStar);
+
+  let warpFrame = 0;
+  warpInterval = setInterval(() => {
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillRect(0, 0, W, H);
+    for (const s of stars) {
+      const px = W / 2 + Math.cos(s.angle) * s.dist;
+      const py = H / 2 + Math.sin(s.angle) * s.dist;
+      s.dist += s.speed * (1 + warpFrame * 0.045);
+      const nx = W / 2 + Math.cos(s.angle) * s.dist;
+      const ny = H / 2 + Math.sin(s.angle) * s.dist;
+      ctx.strokeStyle = `rgba(255,248,200,${Math.min(1, s.dist / 70)})`;
+      ctx.lineWidth   = Math.min(2.5, s.dist / 55);
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      if (nx < -10 || nx > W + 10 || ny < -10 || ny > H + 10) Object.assign(s, newStar());
+    }
+    warpFrame++;
+  }, 16);
+
+  const warpMsg = document.createElement('div');
+  warpMsg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-main);font-size:11px;color:#ffe81f;letter-spacing:0.15em;animation:blink 0.5s step-end infinite;';
+  warpMsg.textContent = 'WARP FACTOR 9';
+  ov.appendChild(warpMsg);
+
+  // ── Phase 2: Captain's Log ──────────────────────────────────────
+  phaseTimer = setTimeout(() => {
+    if (done) return;
+    clearInterval(warpInterval);
+    canvas.remove();
+    warpMsg.remove();
+
+    ov.style.display        = 'flex';
+    ov.style.flexDirection  = 'column';
+    ov.style.alignItems     = 'center';
+    ov.style.justifyContent = 'center';
+    ov.style.padding        = '20px';
+
+    const now        = new Date();
+    const dayOfYear  = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    const stardate   = ((now.getFullYear() - 2000 + 13) * 100 + Math.floor(dayOfYear / 3.65)).toFixed(1);
+
+    const ship = document.createElement('pre');
+    ship.style.cssText = 'font-family:var(--font-main);font-size:8px;color:#7c70da;text-align:center;line-height:1.7;margin-bottom:14px;white-space:pre;';
+    ship.textContent = [
+      '           _____________ ',
+      '          / NCC - 1701  \\',
+      '    ______/_______________\\_______________________ ',
+      '   |   --/               \\--                      |===>',
+      '   |_____\\_______________/________________________|',
+      '          \\             / ',
+      '           \\___________/ ',
+      '                 || ',
+      '            _____|_____ ',
+      '           |___________| ',
+      '           |___________| ',
+    ].join('\n');
+
+    const log = document.createElement('pre');
+    log.style.cssText = 'font-family:var(--font-main);font-size:8px;color:#f5f500;line-height:2;white-space:pre;text-align:left;';
+    log.textContent = [
+      `CAPTAIN'S LOG  STARDATE ${stardate}`,
+      '',
+      'USS ENTERPRISE  NCC-1701-D',
+      '================================',
+      '',
+      'CHIEF ENGINEER J. RATNER reporting.',
+      'All systems operating at warp capacity.',
+      '',
+      '  KUBERNETES    ......... [ WARP  ]',
+      '  TERRAFORM     ......... [ APPLY ]',
+      '  CI/CD         ......... [ RUN   ]',
+      '  COFFEE        ......... [ EMPTY ]',
+      '',
+      'Mission: To explore strange new codebases.',
+      'To seek out new pipelines and clusters.',
+      'To boldly deploy where no one has before.',
+      '',
+      '================================',
+      '',
+      '          [ PRESS ANY KEY ]',
+    ].join('\n');
+
+    ov.appendChild(ship);
+    ov.appendChild(log);
+  }, 2500);
 }
 
 // ── LOLCOW ───────────────────────────────────────────────────────────────────
@@ -1105,6 +1358,7 @@ function eggHelp() {
 <span style="color:#ffffff">COMMANDS</span>
     <span style="color:#00ff41">matrix</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Full-screen Matrix rain (10s or any key)
     <span style="color:#00ff41">starwars</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ASCII Star Wars opening crawl
+    <span style="color:#00ff41">startrek</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Warp jump + Captain's Log
     <span style="color:#00ff41">lolcow</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ASCII cow with random DevOps fortune
     <span style="color:#00ff41">nyan</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nyan cat animation (8s or any key)
     <span style="color:#00ff41">sudo</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Try to escalate privileges
@@ -1158,7 +1412,9 @@ document.addEventListener('keydown', e => {
       break;
 
     case 'Enter':
-      if (state.mode === 'menu') {
+      if (state.eggBuffer) {
+        handleEggKey('Enter');
+      } else if (state.mode === 'menu') {
         activateItem(state.menuIndex);
       } else if (state.mode === 'projects') {
         state.expandedProject = state.expandedProject === state.projectIndex ? null : state.projectIndex;
@@ -1169,7 +1425,9 @@ document.addEventListener('keydown', e => {
       break;
 
     case 'Escape':
-      if (state.mode === 'section' || state.mode === 'projects') {
+      if (state.mode === 'browser') {
+        closeBrowser();
+      } else if (state.mode === 'section' || state.mode === 'projects') {
         backToMenu();
       }
       clearEgg();

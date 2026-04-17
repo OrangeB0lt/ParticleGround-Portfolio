@@ -7,7 +7,7 @@
   --c64-yellow:   #f5f500;
   --c64-lblue:    #7c70da;
   --c64-dark:     #2020a0;
-  --c64-dim:      #5050c8;
+  --c64-dim:      #9898cc;
   --c64-white:    #ffffff;
   --matrix-green: #00ff41;
   --sw-yellow:    #ffe81f;
@@ -114,6 +114,15 @@ html, body {
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;
+}
+
+.egg-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.85em;
+  background: var(--matrix-green);
+  vertical-align: middle;
+  animation: blink 0.8s step-end infinite;
 }
 
 /* ── BOOT SEQUENCE ─────────────────────────────────────────────────────────── */
@@ -495,6 +504,259 @@ a:hover {
   content: '• ';
   color: var(--c64-dim);
 }
+
+/* ── ESC KEY BUTTON ────────────────────────────────────────────────────────── */
+#esc-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 25;
+  font-family: var(--font-main);
+  font-size: 8px;
+  color: var(--c64-yellow);
+  background: var(--c64-dark);
+  border: 1px solid var(--c64-dim);
+  border-bottom: 3px solid var(--c64-dim);
+  border-right: 2px solid var(--c64-dim);
+  padding: 5px 9px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow:
+    inset 0 1px 0 rgba(124, 112, 218, 0.3),
+    0 3px 6px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.08s, border-bottom-width 0.08s;
+  letter-spacing: 0.05em;
+}
+
+#esc-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#esc-btn:hover {
+  color: var(--c64-white);
+  border-color: var(--c64-yellow);
+}
+
+#esc-btn:active {
+  border-bottom-width: 1px;
+  transform: translateY(2px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ── SIMULATED BROWSER ─────────────────────────────────────────────────────── */
+.sim-browser {
+  position: absolute;
+  top: 22px;
+  left: 34px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--c64-blue);
+  border: 2px solid var(--c64-dim);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.65);
+  animation: fade-in 0.15s ease-out;
+}
+
+.sim-browser-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--c64-dark);
+  border-bottom: 2px solid var(--c64-dim);
+  flex-shrink: 0;
+}
+
+.sim-browser-winctrls {
+  font-size: 7px;
+  color: var(--c64-dim);
+  flex-shrink: 0;
+  letter-spacing: 0.1em;
+}
+
+.sim-browser-title {
+  flex: 1;
+  font-size: 8px;
+  color: var(--c64-yellow);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sim-browser-close {
+  font-size: 8px;
+  color: var(--c64-yellow);
+  background: none;
+  border: 1px solid var(--c64-dim);
+  border-bottom: 3px solid var(--c64-dim);
+  padding: 2px 7px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+}
+
+.sim-browser-close:hover { background: var(--c64-dim); color: var(--c64-white); }
+.sim-browser-close:active { border-bottom-width: 1px; transform: translateY(2px); }
+
+.sim-browser-urlbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--c64-blue);
+  border-bottom: 1px solid var(--c64-dark);
+  flex-shrink: 0;
+}
+
+.sim-browser-nav {
+  font-size: 7px;
+  color: var(--c64-dim);
+  flex-shrink: 0;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+
+.sim-browser-url {
+  flex: 1;
+  font-size: 7px;
+  color: var(--matrix-green);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--c64-dark);
+  padding: 3px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-main);
+}
+
+.sim-browser-body {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sim-browser-screenshot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.sim-browser-screenshot:hover {
+  outline: 2px solid var(--matrix-green);
+}
+
+.sim-browser-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--c64-blue);
+  gap: 14px;
+  z-index: 1;
+}
+
+.sim-browser-load-text {
+  font-size: 8px;
+  color: var(--c64-yellow);
+  text-align: center;
+  animation: blink 1s step-end infinite;
+}
+
+.sim-browser-load-sub {
+  font-size: 7px;
+  color: var(--c64-dim);
+  text-align: center;
+}
+
+.sim-browser-blocked {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--c64-blue);
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.sim-browser-blocked-title {
+  font-size: 12px;
+  color: var(--c64-white);
+}
+
+.sim-browser-blocked-host {
+  font-size: 8px;
+  color: var(--c64-lblue);
+}
+
+.sim-browser-blocked-err {
+  font-size: 8px;
+  color: var(--matrix-green);
+}
+
+.sim-browser-blocked-info {
+  font-size: 7px;
+  color: var(--c64-dim);
+  line-height: 2.2;
+}
+
+.sim-browser-blocked-link {
+  margin-top: 6px;
+  font-size: 9px;
+  color: var(--matrix-green);
+  text-decoration: none;
+  border: 1px solid var(--matrix-green);
+  padding: 6px 12px;
+  display: inline-block;
+  transition: background 0.1s, color 0.1s;
+}
+
+.sim-browser-blocked-link:hover {
+  background: var(--matrix-green);
+  color: #000;
+  text-decoration: none;
+}
+
+
+.sim-browser-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  background: var(--c64-dark);
+  border-top: 1px solid var(--c64-dim);
+  flex-shrink: 0;
+  font-size: 7px;
+  font-family: var(--font-main);
+}
+
+.sim-browser-status { color: var(--c64-dim); }
+
+.sim-browser-newtab {
+  color: var(--matrix-green);
+  text-decoration: none;
+}
+
+.sim-browser-newtab:hover { color: var(--c64-white); text-decoration: underline; }
 
 /* ── RESPONSIVE ────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
