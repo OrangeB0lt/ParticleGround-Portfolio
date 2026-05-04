@@ -1,7 +1,7 @@
 /**
  * Render function smoke tests.
- * Verifies that section renderers and the menu renderer produce DOM output
- * and set the correct mode, without asserting precise HTML structure.
+ * Verifies the menu renderer and the runCommand dispatch produce DOM output
+ * and the right state, without asserting precise HTML structure.
  */
 
 import { describe, it, beforeEach } from 'node:test';
@@ -12,17 +12,17 @@ const dom = setupDOM();
 
 const {
   state,
-  renderMenu,
+  renderMenu, runCommand,
   MENU_ITEMS, PROJECTS,
 } = await import('../js/main.js');
 
 function resetState() {
-  state.mode            = 'menu';
-  state.menuIndex       = 0;
-  state.projectIndex    = 0;
-  state.expandedProject = null;
-  state.skillsActive    = false;
-  state.bootAborted     = false;
+  state.mode        = 'menu';
+  state.menuIndex   = 0;
+  state.bootAborted = false;
+  state.fsFiles     = null;
+  state.fsDir       = null;
+  state.eggBuffer   = '';
   // clear terminal
   const t = dom.getEl('terminal');
   t.innerHTML = '';
@@ -34,21 +34,9 @@ describe('renderMenu()', () => {
   beforeEach(resetState);
 
   it('sets state.mode to "menu"', () => {
-    state.mode = 'section';
+    state.mode = 'easter';
     renderMenu();
     assert.strictEqual(state.mode, 'menu');
-  });
-
-  it('clears skillsActive', () => {
-    state.skillsActive = true;
-    renderMenu();
-    assert.strictEqual(state.skillsActive, false);
-  });
-
-  it('resets expandedProject', () => {
-    state.expandedProject = 3;
-    renderMenu();
-    assert.strictEqual(state.expandedProject, null);
   });
 
   it('appends at least one child element to terminal', () => {
@@ -57,10 +45,49 @@ describe('renderMenu()', () => {
     assert.ok(t.children.length > 0, 'renderMenu produced no DOM output');
   });
 
-  it('preserves menuIndex when called from a section', () => {
+  it('preserves menuIndex when re-rendering the menu', () => {
     state.menuIndex = 4;
     renderMenu();
     assert.strictEqual(state.menuIndex, 4, 'menuIndex should not be reset by renderMenu');
+  });
+});
+
+// ── runCommand() ──────────────────────────────────────────────────────────────
+
+describe('runCommand()', () => {
+  beforeEach(resetState);
+
+  it('appends a .cmd-line for an unknown command', async () => {
+    const t = dom.getEl('terminal');
+    const before = t.children.length;
+    await runCommand('foobar');
+    assert.ok(t.children.length > before, 'no DOM appended for unknown command');
+  });
+
+  it('"clear" leaves state.mode as menu', async () => {
+    await runCommand('clear');
+    assert.strictEqual(state.mode, 'menu');
+  });
+
+  it('typing "about" stays in menu mode (sections render as inline output)', async () => {
+    await runCommand('about');
+    assert.strictEqual(state.mode, 'menu');
+  });
+
+  it('"matrix" flips state.mode to "easter"', async () => {
+    await runCommand('matrix');
+    assert.strictEqual(state.mode, 'easter');
+    state.mode = 'menu';
+  });
+
+  it('"ls" stays in menu mode (inline egg)', async () => {
+    await runCommand('ls');
+    assert.strictEqual(state.mode, 'menu');
+  });
+
+  it('"cat ratnerme.md" stays in menu mode (project detail inline)', async () => {
+    await runCommand('cat ratnerme.md');
+    assert.strictEqual(state.mode, 'menu');
   });
 });
 
@@ -87,7 +114,7 @@ describe('MENU_ITEMS match rendered label count', () => {
 // ── PROJECTS data in render context ──────────────────────────────────────────
 
 describe('PROJECTS for project list rendering', () => {
-  it('all 5 projects have fields needed by renderProjects()', () => {
+  it('all 5 projects have fields needed by sectionProjects()', () => {
     for (const [i, p] of PROJECTS.entries()) {
       assert.ok(p.perms,             `[${i}] missing perms`);
       assert.ok(p.name,              `[${i}] missing name`);
@@ -115,13 +142,6 @@ describe('state invariants', () => {
   it('menuIndex stays within valid range after renderMenu', () => {
     renderMenu();
     assert.ok(state.menuIndex >= 0 && state.menuIndex < MENU_ITEMS.length);
-  });
-
-  it('projectIndex stays within valid range after multiple cycles', () => {
-    for (let i = 0; i < PROJECTS.length * 3; i++) {
-      state.projectIndex = (state.projectIndex + 1) % PROJECTS.length;
-    }
-    assert.ok(state.projectIndex >= 0 && state.projectIndex < PROJECTS.length);
   });
 
   it('mode "menu" allows egg input (not easter)', () => {

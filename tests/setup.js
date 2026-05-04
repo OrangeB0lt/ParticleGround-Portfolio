@@ -75,9 +75,27 @@ export function setupDOM() {
         el.height = 0;
         el.getContext = () => ({
           fillStyle: '',
+          strokeStyle: '',
           font: '',
-          fillRect:  () => {},
-          fillText:  () => {},
+          textAlign: '',
+          lineWidth: 1,
+          fillRect:    () => {},
+          fillText:    () => {},
+          strokeRect:  () => {},
+          clearRect:   () => {},
+          beginPath:   () => {},
+          moveTo:      () => {},
+          lineTo:      () => {},
+          stroke:      () => {},
+          fill:        () => {},
+          arc:         () => {},
+          closePath:   () => {},
+          save:        () => {},
+          restore:     () => {},
+          translate:   () => {},
+          scale:       () => {},
+          drawImage:   () => {},
+          measureText: () => ({ width: 0 }),
         });
       }
       return el;

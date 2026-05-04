@@ -5,7 +5,7 @@
  * clearEgg(), and command recognition against EGG_COMMANDS set.
  */
 
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { setupDOM } from './setup.js';
 
@@ -18,8 +18,8 @@ function resetState() {
   state.eggBuffer  = '';
   state.eggTimer   = null;
   state.eggOverlay = null;
-  state.prevMode   = 'menu';
   state.fsFiles    = null;
+  state.fsDir      = null;
 }
 
 // ── clearEgg() ────────────────────────────────────────────────────────────────
@@ -137,10 +137,11 @@ describe('handleEggKey() — Escape', () => {
 
 // ── handleEggKey() — Enter with recognised command ───────────────────────────
 
-describe('handleEggKey() — Enter (recognised command)', () => {
+describe('handleEggKey() — Enter (recognised overlay command)', () => {
   beforeEach(resetState);
 
-  for (const cmd of ['matrix', 'starwars', 'cowsay', 'nyan', 'sudo', 'hack', 'help']) {
+  // Visual-overlay eggs flip mode to easter while the overlay is up.
+  for (const cmd of ['matrix', 'starwars', 'nyan', 'sudo', 'hack']) {
     it(`"${cmd}" sets state.mode to easter and clears buffer`, () => {
       cmd.split('').forEach(c => handleEggKey(c));
       assert.strictEqual(state.eggBuffer, cmd);
@@ -149,6 +150,16 @@ describe('handleEggKey() — Enter (recognised command)', () => {
       assert.strictEqual(state.mode, 'easter', 'mode not set to easter');
       // reset mode so other tests are unaffected
       state.mode = 'menu';
+    });
+  }
+
+  // Inline text eggs render into the scrollback and stay in menu mode.
+  for (const cmd of ['cowsay', 'help', 'pwd', 'whoami', 'uname']) {
+    it(`"${cmd}" stays in menu mode and clears buffer`, () => {
+      cmd.split('').forEach(c => handleEggKey(c));
+      handleEggKey('Enter');
+      assert.strictEqual(state.eggBuffer, '');
+      assert.strictEqual(state.mode, 'menu');
     });
   }
 });
@@ -260,14 +271,13 @@ describe('handleEggKey() — spaces, dashes, and dots', () => {
     assert.strictEqual(state.eggBuffer, 'nano .bashrc');
   });
 
-  it('recognises "ls -la" as the ls command on Enter', () => {
+  it('"ls -la" runs the inline ls command and stays in menu mode', () => {
     'ls -la'.split('').forEach(c => handleEggKey(c));
     handleEggKey('Enter');
-    assert.strictEqual(state.mode, 'easter');
-    state.mode = 'menu';
+    assert.strictEqual(state.mode, 'menu');
   });
 
-  it('recognises "nano readme.txt" as the nano command on Enter', () => {
+  it('recognises "nano readme.txt" as the nano command on Enter (overlay)', () => {
     'nano readme.txt'.split('').forEach(c => handleEggKey(c));
     handleEggKey('Enter');
     assert.strictEqual(state.mode, 'easter');
@@ -376,6 +386,119 @@ describe('rm via runEgg', () => {
     runEgg('rm temp.log');
     assert.ok(!state.fsFiles.has('temp.log'));
     state.mode = 'menu';
+  });
+});
+
+// ── games directory ───────────────────────────────────────────────────────────
+
+describe('games directory — initFs', () => {
+  beforeEach(resetState);
+
+  it('includes a games/ entry', () => {
+    initFs();
+    assert.ok(state.fsFiles.has('games'), 'games/ missing from initFs');
+  });
+
+  it('games entry is a directory', () => {
+    initFs();
+    const entry = state.fsFiles.get('games');
+    assert.strictEqual(entry.type, 'dir');
+  });
+
+  it('games entry has executable perms', () => {
+    initFs();
+    const entry = state.fsFiles.get('games');
+    assert.match(entry.perms, /^d/, 'perms should start with d');
+  });
+});
+
+// ── state.fsDir ───────────────────────────────────────────────────────────────
+
+describe('state.fsDir initial value', () => {
+  it('starts as null', () => {
+    assert.strictEqual(state.fsDir, null);
+  });
+});
+
+describe('cd games — sets fsDir', () => {
+  beforeEach(resetState);
+
+  it('cd games sets state.fsDir to "games"', () => {
+    runEgg('cd games');
+    assert.strictEqual(state.fsDir, 'games');
+    state.mode = 'menu';
+  });
+
+  it('cd games when already in games dir does not double-navigate', () => {
+    state.fsDir = 'games';
+    runEgg('cd games');
+    // target === 'games' but state.fsDir is already set, so falls through to error
+    assert.strictEqual(state.fsDir, 'games');
+    state.mode = 'menu';
+  });
+
+  it('cd .. from games dir clears state.fsDir', () => {
+    state.fsDir = 'games';
+    runEgg('cd ..');
+    assert.strictEqual(state.fsDir, null);
+    state.mode = 'menu';
+  });
+
+  it('cd ~ from games dir clears state.fsDir', () => {
+    state.fsDir = 'games';
+    runEgg('cd ~');
+    assert.strictEqual(state.fsDir, null);
+    state.mode = 'menu';
+  });
+});
+
+// ── ./snake.prg command ───────────────────────────────────────────────────────
+
+describe('./snake.prg in EGG_COMMANDS', () => {
+  it('./snake.prg is a recognised command', () => {
+    assert.ok(EGG_COMMANDS.has('./snake.prg'), '"./snake.prg" not in EGG_COMMANDS');
+  });
+});
+
+describe('handleEggKey() — slash and ./snake.prg typing', () => {
+  // eggSnake creates a setInterval blink timer; mock it so the process doesn't hang
+  let _origSetInterval, _origClearInterval;
+  beforeEach(() => {
+    resetState();
+    _origSetInterval   = globalThis.setInterval;
+    _origClearInterval = globalThis.clearInterval;
+    globalThis.setInterval   = () => 0;
+    globalThis.clearInterval = () => {};
+  });
+  afterEach(() => {
+    globalThis.setInterval   = _origSetInterval;
+    globalThis.clearInterval = _origClearInterval;
+    state.mode  = 'menu';
+    state.fsDir = null;
+  });
+
+  it('accepts / character into the buffer', () => {
+    handleEggKey('.');
+    handleEggKey('/');
+    assert.strictEqual(state.eggBuffer, './');
+  });
+
+  it('accumulates ./snake.prg in full', () => {
+    './snake.prg'.split('').forEach(c => handleEggKey(c));
+    assert.strictEqual(state.eggBuffer, './snake.prg');
+  });
+
+  it('typing ./snake.prg and Enter sets mode to easter (from games dir)', () => {
+    state.fsDir = 'games';
+    './snake.prg'.split('').forEach(c => handleEggKey(c));
+    handleEggKey('Enter');
+    assert.strictEqual(state.mode, 'easter');
+  });
+
+  it('./snake.prg from root prints "no such file" inline and stays in menu mode', () => {
+    './snake.prg'.split('').forEach(c => handleEggKey(c));
+    handleEggKey('Enter');
+    assert.strictEqual(state.mode, 'menu');
   });
 });
 
