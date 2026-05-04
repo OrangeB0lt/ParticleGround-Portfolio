@@ -783,6 +783,7 @@ function clearEgg() {
 }
 
 async function eggNotFound(cmd) {
+  if (typeof clarity === 'function') clarity('event', `egg_unknown_${cmd}`);
   $eggInput.textContent = `bash: ${cmd}: command not found`;
   $eggInput.style.opacity = '1';
   await new Promise(r => setTimeout(r, 2500));
@@ -822,6 +823,7 @@ function handleEggKey(key) {
 function runEgg(cmd) {
   state.prevMode = state.mode;
   state.mode = 'easter';
+  if (typeof clarity === 'function') clarity('event', `egg_${cmd}`);
 
   switch (cmd) {
     case 'matrix':   eggMatrix();   break;
