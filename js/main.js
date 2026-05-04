@@ -13,7 +13,10 @@ import {
 import { delay, typeText, appendOutput, appendCmdLine } from './utils.js';
 import { initFs } from './fs.js';
 import { PROJECT_FILES } from './sections.js';
-import { handleEggKey, clearEgg, handleTabComplete } from './egg-input.js';
+import {
+  handleEggKey, clearEgg,
+  handleEggPaste, loadHistory, pushHistory, expandHistory,
+} from './egg-input.js';
 import { runEgg } from './egg-runtime.js';
 import { runBoot } from './boot.js';
 import { renderMenu, syncMenuCursor, activateItem } from './menu.js';
@@ -30,46 +33,60 @@ function installGlobalListeners() {
     }
     if (state.mode === 'easter') return;
 
-    switch (e.key) {
-      case 'ArrowUp':
-        e.preventDefault();
-        if (state.mode === 'menu') {
+    if (state.mode === 'browser') {
+      if (e.key === 'Escape') { closeBrowser(); clearEgg(); }
+      return;
+    }
+
+    // Up/Down: if buffer non-empty, in history walk, or history exists → line editor.
+    // Otherwise fall back to menu navigation.
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const useHistory =
+        state.eggBuffer !== '' ||
+        state.eggHistoryIndex !== null ||
+        state.eggHistory.length > 0 ||
+        state.eggReverseSearch !== null;
+      if (useHistory) {
+        handleEggKey(e);
+      } else if (state.mode === 'menu') {
+        if (e.key === 'ArrowUp') {
           state.menuIndex = (state.menuIndex - 1 + MENU_ITEMS.length) % MENU_ITEMS.length;
-          syncMenuCursor();
-        }
-        break;
-
-      case 'ArrowDown':
-        e.preventDefault();
-        if (state.mode === 'menu') {
+        } else {
           state.menuIndex = (state.menuIndex + 1) % MENU_ITEMS.length;
-          syncMenuCursor();
         }
-        break;
+        syncMenuCursor();
+      }
+      return;
+    }
 
-      case 'Enter':
-        if (state.eggBuffer) {
-          handleEggKey('Enter');
-        } else if (state.mode === 'menu') {
-          activateItem(state.menuIndex);
-        }
-        break;
+    // Enter: when there's buffer or rsearch active, dispatch to line editor.
+    // When buffer empty and on menu, activate selected item.
+    if (e.key === 'Enter') {
+      if (state.eggBuffer || state.eggReverseSearch) {
+        handleEggKey(e);
+      } else if (state.mode === 'menu') {
+        activateItem(state.menuIndex);
+      }
+      return;
+    }
 
-      case 'Escape':
-        if (state.mode === 'browser') {
-          closeBrowser();
-        }
-        clearEgg();
-        break;
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      handleEggKey(e);
+      return;
+    }
 
-      case 'Tab':
-        e.preventDefault();
-        handleTabComplete();
-        break;
+    handleEggKey(e);
+  });
 
-      default:
-        handleEggKey(e.key);
-        break;
+  // Paste support: route into the line editor
+  document.addEventListener('paste', e => {
+    if (state.mode === 'easter' || state.mode === 'boot' || state.mode === 'browser') return;
+    const text = e.clipboardData && e.clipboardData.getData('text');
+    if (text) {
+      e.preventDefault();
+      handleEggPaste(text);
     }
   });
 
@@ -97,6 +114,7 @@ function installGlobalListeners() {
 // ── INIT ─────────────────────────────────────────────────────────────────────
 
 if (!globalThis.__TEST_ENV__) {
+  loadHistory();
   installGlobalListeners();
   runBoot();
 }
@@ -109,6 +127,7 @@ export {
   LINKEDIN_URL, MEDIUM_URL, GITHUB_URL,
   PROJECT_FILES, SECTION_CMDS,
   handleEggKey, clearEgg,
+  handleEggPaste, pushHistory, expandHistory, loadHistory,
   delay, typeText,
   renderMenu, syncMenuCursor,
   runBoot, runCommand,

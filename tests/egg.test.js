@@ -11,15 +11,28 @@ import { setupDOM } from './setup.js';
 
 setupDOM();
 
-const { state, handleEggKey, clearEgg, EGG_COMMANDS, initFs, runEgg } = await import('../js/main.js');
+const {
+  state, handleEggKey, clearEgg, EGG_COMMANDS, initFs, runEgg,
+  pushHistory, expandHistory,
+} = await import('../js/main.js');
 
 function resetState() {
-  state.mode       = 'menu';
-  state.eggBuffer  = '';
-  state.eggTimer   = null;
-  state.eggOverlay = null;
-  state.fsFiles    = null;
-  state.fsDir      = null;
+  state.mode             = 'menu';
+  state.eggBuffer        = '';
+  state.eggCursor        = 0;
+  state.eggTimer         = null;
+  state.eggTyping        = false;
+  state.eggSuggest       = null;
+  state.eggTabState      = null;
+  state.eggHistory       = [];
+  state.eggHistoryIndex  = null;
+  state.eggHistoryDraft  = '';
+  state.eggGhost         = '';
+  state.eggReverseSearch = null;
+  state.eggOverlay       = null;
+  state.fsFiles          = null;
+  state.fsDir            = null;
+  if (typeof localStorage !== 'undefined') localStorage.clear();
 }
 
 // ── clearEgg() ────────────────────────────────────────────────────────────────
@@ -62,26 +75,26 @@ describe('handleEggKey() — buffer accumulation', () => {
     assert.strictEqual(state.eggBuffer, 'matrix');
   });
 
-  it('normalises uppercase input to lowercase', () => {
+  it('preserves case in display buffer (router lowercases at match time)', () => {
     handleEggKey('M');
     handleEggKey('A');
-    assert.strictEqual(state.eggBuffer, 'ma');
+    assert.strictEqual(state.eggBuffer, 'MA');
   });
 
-  it('sets eggTimer on each char', () => {
+  it('sets eggTimer on each char (typing-blink suppression)', () => {
     handleEggKey('a');
     assert.ok(state.eggTimer !== null, 'eggTimer not set after keypress');
   });
 
-  it('ignores punctuation characters (!, @)', () => {
+  it('accepts ! and @ as printable characters into the buffer', () => {
     handleEggKey('!');
     handleEggKey('@');
-    assert.strictEqual(state.eggBuffer, '');
+    assert.strictEqual(state.eggBuffer, '!@');
   });
 
-  it('ignores leading space (buffer empty)', () => {
+  it('accepts leading space (buffer empty)', () => {
     handleEggKey(' ');
-    assert.strictEqual(state.eggBuffer, '');
+    assert.strictEqual(state.eggBuffer, ' ');
   });
 
   it('ignores function-key names like Shift, Control, Alt', () => {
@@ -249,12 +262,12 @@ describe('handleEggKey() — spaces, dashes, and dots', () => {
     assert.strictEqual(state.eggBuffer, 'ls ');
   });
 
-  it('collapses consecutive spaces', () => {
+  it('preserves consecutive spaces (real-shell behavior)', () => {
     handleEggKey('l');
     handleEggKey('s');
     handleEggKey(' ');
     handleEggKey(' ');
-    assert.strictEqual(state.eggBuffer, 'ls ');
+    assert.strictEqual(state.eggBuffer, 'ls  ');
   });
 
   it('accumulates flags (dash)', () => {
@@ -514,5 +527,189 @@ describe('eggNanoVi — corrupted file flag', () => {
       owner: 'jared', group: 'staff', size: 5, mtime: 'May  4 10:00' });
     state.fsFiles.get('test.txt').corrupted = true;
     assert.ok(state.fsFiles.get('test.txt').corrupted);
+  });
+});
+
+// ── cursor movement ──────────────────────────────────────────────────────────
+
+describe('cursor movement', () => {
+  beforeEach(resetState);
+
+  it('Home / Ctrl+A jumps cursor to start', () => {
+    'matrix'.split('').forEach(c => handleEggKey(c));
+    assert.strictEqual(state.eggCursor, 6);
+    handleEggKey({ key: 'a', ctrlKey: true, metaKey: false, altKey: false, preventDefault() {} });
+    assert.strictEqual(state.eggCursor, 0);
+  });
+
+  it('End / Ctrl+E jumps cursor to end', () => {
+    'matrix'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'Home' });
+    assert.strictEqual(state.eggCursor, 0);
+    handleEggKey({ key: 'End' });
+    assert.strictEqual(state.eggCursor, 6);
+  });
+
+  it('ArrowLeft moves cursor and inserts mid-line', () => {
+    'matrix'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'ArrowLeft' });
+    handleEggKey({ key: 'ArrowLeft' });
+    assert.strictEqual(state.eggCursor, 4);
+    handleEggKey('X');
+    assert.strictEqual(state.eggBuffer, 'matrXix');
+    assert.strictEqual(state.eggCursor, 5);
+  });
+
+  it('Backspace deletes the char before the cursor (mid-line)', () => {
+    'abcde'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'ArrowLeft' });   // cursor at 4
+    handleEggKey({ key: 'ArrowLeft' });   // cursor at 3
+    handleEggKey('Backspace');            // remove 'c'
+    assert.strictEqual(state.eggBuffer, 'abde');
+    assert.strictEqual(state.eggCursor, 2);
+  });
+});
+
+// ── ctrl-w / ctrl-u / ctrl-k ─────────────────────────────────────────────────
+
+describe('readline kill keys', () => {
+  beforeEach(resetState);
+
+  it('Ctrl+W deletes the previous word', () => {
+    'cat about.txt'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'w', ctrlKey: true, preventDefault() {} });
+    assert.strictEqual(state.eggBuffer, 'cat ');
+  });
+
+  it('Ctrl+U deletes from start to cursor', () => {
+    'cat about.txt'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'u', ctrlKey: true, preventDefault() {} });
+    assert.strictEqual(state.eggBuffer, '');
+    assert.strictEqual(state.eggCursor, 0);
+  });
+
+  it('Ctrl+K deletes from cursor to end', () => {
+    'cat about.txt'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'Home' });
+    handleEggKey({ key: 'ArrowRight' });
+    handleEggKey({ key: 'ArrowRight' });
+    handleEggKey({ key: 'ArrowRight' });
+    handleEggKey({ key: 'k', ctrlKey: true, preventDefault() {} });
+    assert.strictEqual(state.eggBuffer, 'cat');
+  });
+});
+
+// ── history navigation ───────────────────────────────────────────────────────
+
+describe('command history', () => {
+  beforeEach(resetState);
+
+  it('pushHistory dedupes consecutive identical entries', () => {
+    pushHistory('matrix');
+    pushHistory('matrix');
+    pushHistory('cowsay');
+    assert.deepStrictEqual(state.eggHistory, ['matrix', 'cowsay']);
+  });
+
+  it('ArrowUp recalls the most recent command into the buffer', () => {
+    pushHistory('matrix');
+    pushHistory('cowsay');
+    handleEggKey({ key: 'ArrowUp' });
+    assert.strictEqual(state.eggBuffer, 'cowsay');
+    assert.strictEqual(state.eggCursor, 6);
+  });
+
+  it('ArrowUp twice walks back through history', () => {
+    pushHistory('matrix');
+    pushHistory('cowsay');
+    handleEggKey({ key: 'ArrowUp' });
+    handleEggKey({ key: 'ArrowUp' });
+    assert.strictEqual(state.eggBuffer, 'matrix');
+  });
+
+  it('ArrowDown after ArrowUp restores the in-progress draft', () => {
+    pushHistory('matrix');
+    'cow'.split('').forEach(c => handleEggKey(c));
+    handleEggKey({ key: 'ArrowUp' });
+    assert.strictEqual(state.eggBuffer, 'matrix');
+    handleEggKey({ key: 'ArrowDown' });
+    assert.strictEqual(state.eggBuffer, 'cow');
+  });
+});
+
+// ── history expansion (! syntax) ─────────────────────────────────────────────
+
+describe('expandHistory', () => {
+  beforeEach(resetState);
+
+  it('!! returns the last command', () => {
+    state.eggHistory = ['matrix', 'cowsay'];
+    const r = expandHistory('!!');
+    assert.deepStrictEqual(r, { ok: true, line: 'cowsay', expanded: true });
+  });
+
+  it('!matrix matches by prefix', () => {
+    state.eggHistory = ['cowsay', 'matrix', 'help'];
+    const r = expandHistory('!mat');
+    assert.strictEqual(r.ok, true);
+    assert.strictEqual(r.line, 'matrix');
+  });
+
+  it('!$ returns the last token of the previous command', () => {
+    state.eggHistory = ['cat about.txt'];
+    const r = expandHistory('cat !$');
+    assert.strictEqual(r.line, 'cat about.txt');
+  });
+
+  it('!1 returns the first history entry', () => {
+    state.eggHistory = ['matrix', 'cowsay'];
+    const r = expandHistory('!1');
+    assert.strictEqual(r.line, 'matrix');
+  });
+
+  it('!-1 returns the most recent entry', () => {
+    state.eggHistory = ['matrix', 'cowsay'];
+    const r = expandHistory('!-1');
+    assert.strictEqual(r.line, 'cowsay');
+  });
+
+  it('returns ok:false with badRef when no match', () => {
+    state.eggHistory = ['matrix'];
+    const r = expandHistory('!nope');
+    assert.strictEqual(r.ok, false);
+    assert.strictEqual(r.badRef, '!nope');
+  });
+
+  it('leaves "!" unchanged when followed by space', () => {
+    state.eggHistory = ['matrix'];
+    const r = expandHistory('echo ! works');
+    assert.strictEqual(r.line, 'echo ! works');
+    assert.strictEqual(r.expanded, false);
+  });
+});
+
+describe('Enter triggers history expansion', () => {
+  beforeEach(resetState);
+
+  it('typing !! and pressing Enter re-runs the last command', () => {
+    pushHistory('cowsay');
+    '!!'.split('').forEach(c => handleEggKey(c));
+    handleEggKey('Enter');
+    // cowsay is an inline egg; mode stays menu, history grew
+    assert.strictEqual(state.eggHistory[state.eggHistory.length - 1], 'cowsay');
+    assert.strictEqual(state.eggBuffer, '');
+  });
+});
+
+// ── localStorage persistence ─────────────────────────────────────────────────
+
+describe('history persistence', () => {
+  beforeEach(resetState);
+
+  it('pushHistory writes to localStorage', () => {
+    pushHistory('matrix');
+    const raw = localStorage.getItem('eggHistory.v1');
+    assert.ok(raw, 'eggHistory.v1 not written');
+    assert.deepStrictEqual(JSON.parse(raw), ['matrix']);
   });
 });

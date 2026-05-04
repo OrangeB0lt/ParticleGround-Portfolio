@@ -3,7 +3,7 @@
 import { MENU_ITEMS } from './config.js';
 import { state } from './state.js';
 import { $terminal } from './dom.js';
-import { appendHTML } from './utils.js';
+import { appendHTML, clearCmdAnchor } from './utils.js';
 import { updateEggDisplay } from './egg-input.js';
 import { SECTION_CMDS, runCommand } from './router.js';
 
@@ -12,6 +12,7 @@ import { SECTION_CMDS, runCommand } from './router.js';
 function renderMenu() {
   state.mode = 'menu';
   $terminal.innerHTML = '';
+  clearCmdAnchor();
   updateEggDisplay();
 
   const wrap = document.createElement('div');

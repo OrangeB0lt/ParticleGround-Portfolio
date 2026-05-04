@@ -35,8 +35,18 @@ function appendHTML(parent, html, cls) {
   return div;
 }
 
+let cmdAnchor = null;
+
 function scrollBottom() {
-  $screen.scrollTop = $screen.scrollHeight;
+  if (cmdAnchor && cmdAnchor.isConnected) {
+    cmdAnchor.scrollIntoView({ block: 'start' });
+  } else {
+    $screen.scrollTop = $screen.scrollHeight;
+  }
+}
+
+function clearCmdAnchor() {
+  cmdAnchor = null;
 }
 
 function escapeHTML(s) {
@@ -79,12 +89,13 @@ function appendCmdLine(echoText) {
   div.className = 'cmd-line';
   div.innerHTML = `<span class="prompt">${promptPrefix()}</span> ${escapeHTML(echoText)}`;
   $terminal.appendChild(div);
+  cmdAnchor = div;
   scrollBottom();
   return div;
 }
 
 export {
   delay, typeText, typeLine,
-  appendHTML, scrollBottom, escapeHTML, promptPrefix,
+  appendHTML, scrollBottom, clearCmdAnchor, escapeHTML, promptPrefix,
   appendOutput, appendPreText, appendPreHTML, appendCmdLine,
 };

@@ -120,11 +120,25 @@ html, body {
 
 .egg-cursor {
   display: inline-block;
-  width: 0.6em;
-  height: 0.85em;
   background: var(--matrix-green);
-  vertical-align: middle;
+  color: #000;
+  white-space: pre;
   animation: blink 0.8s step-end infinite;
+}
+.egg-cursor.is-typing {
+  animation: none;
+  opacity: 1;
+}
+
+.egg-ghost {
+  color: var(--matrix-green);
+  opacity: 0.35;
+}
+
+.egg-rsearch {
+  color: var(--c64-yellow);
+  font-size: 9px;
+  margin-bottom: 2px;
 }
 
 .egg-suggest {

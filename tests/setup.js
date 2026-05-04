@@ -38,6 +38,7 @@ function createEl(id = '') {
     classList: fakeClassList(),
 
     appendChild(child) { ch.push(child); return child; },
+    replaceChildren(...nodes) { ch.length = 0; _inner = ''; for (const n of nodes) ch.push(n); },
     querySelector()    { return null; },
     querySelectorAll() { return []; },
     addEventListener() {},
@@ -68,6 +69,9 @@ export function setupDOM() {
 
   globalThis.document = {
     getElementById: getOrCreate,
+    createTextNode(text) {
+      return { textContent: String(text), nodeType: 3 };
+    },
     createElement(tag) {
       const el = createEl();
       if (tag === 'canvas') {
@@ -108,6 +112,17 @@ export function setupDOM() {
     open:        () => {},
     innerWidth:  1920,
     innerHeight: 1080,
+  };
+
+  // localStorage shim — backs the egg-input history persistence
+  const _ls = new Map();
+  globalThis.localStorage = {
+    getItem(k)         { return _ls.has(k) ? _ls.get(k) : null; },
+    setItem(k, v)      { _ls.set(k, String(v)); },
+    removeItem(k)      { _ls.delete(k); },
+    clear()            { _ls.clear(); },
+    key(i)             { return Array.from(_ls.keys())[i] ?? null; },
+    get length()       { return _ls.size; },
   };
 
   return {
