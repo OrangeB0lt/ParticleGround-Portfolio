@@ -78,7 +78,11 @@ const PROJECTS = [
   },
 ];
 
-const EGG_COMMANDS = new Set(['matrix', 'starwars', 'startrek', 'cowsay', 'nyan', 'sudo', 'hack', 'help']);
+const EGG_COMMANDS = new Set([
+  'matrix', 'starwars', 'startrek', 'cowsay', 'nyan', 'sudo', 'hack', 'help',
+  'ls', 'cd', 'mkdir', 'touch', 'nano', 'vi', 'vim',
+  'chmod', 'chown', 'pwd', 'cat', 'rm', 'whoami', 'uname', 'clear',
+]);
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 
@@ -93,6 +97,7 @@ const state = {
   eggTimer: null,
   eggOverlay: null,
   prevMode: 'menu',
+  fsFiles: null,
 };
 
 // ── DOM ──────────────────────────────────────────────────────────────────────
@@ -796,11 +801,11 @@ function handleEggKey(key) {
   if (key === 'Escape') { clearEgg(); return; }
 
   if (key === 'Enter') {
-    const cmd = state.eggBuffer.trim().toLowerCase();
+    const input = state.eggBuffer.trim().toLowerCase();
     clearEgg();
-    if (!cmd) return;
-    if (EGG_COMMANDS.has(cmd)) runEgg(cmd);
-    else eggNotFound(cmd);
+    if (!input) return;
+    if (EGG_COMMANDS.has(input.split(/\s+/)[0])) runEgg(input);
+    else eggNotFound(input);
     return;
   }
 
@@ -810,30 +815,56 @@ function handleEggKey(key) {
     return;
   }
 
-  if (key.length === 1 && /[\w]/.test(key)) {
+  if (key === ' ') {
+    if (state.eggBuffer.length > 0 && !state.eggBuffer.endsWith(' ')) {
+      state.eggBuffer += ' ';
+      if (state.eggTimer) clearTimeout(state.eggTimer);
+      state.eggTimer = setTimeout(clearEgg, 5000);
+      updateEggDisplay();
+    }
+    return;
+  }
+
+  if (key.length === 1 && /[\w\-\.]/.test(key)) {
     state.eggBuffer += key.toLowerCase();
     if (state.eggTimer) clearTimeout(state.eggTimer);
-    state.eggTimer = setTimeout(clearEgg, 3000);
+    state.eggTimer = setTimeout(clearEgg, 5000);
     updateEggDisplay();
   }
 }
 
 // ── EASTER EGG RUNNER ────────────────────────────────────────────────────────
 
-function runEgg(cmd) {
+function runEgg(input) {
+  const [cmd, ...args] = input.trim().split(/\s+/);
   state.prevMode = state.mode;
   state.mode = 'easter';
   if (typeof clarity === 'function') clarity('event', `egg_${cmd}`);
 
   switch (cmd) {
-    case 'matrix':   eggMatrix();   break;
-    case 'starwars': eggStarWars(); break;
-    case 'startrek': eggStarTrek(); break;
-    case 'cowsay':   eggCowsay();   break;
-    case 'nyan':     eggNyan();     break;
-    case 'sudo':     eggSudo();     break;
-    case 'hack':     eggHack();     break;
-    case 'help':     eggHelp();     break;
+    case 'matrix':   eggMatrix();                    break;
+    case 'starwars': eggStarWars();                  break;
+    case 'startrek': eggStarTrek();                  break;
+    case 'cowsay':   eggCowsay();                    break;
+    case 'nyan':     eggNyan();                      break;
+    case 'sudo':     eggSudo();                      break;
+    case 'hack':     eggHack();                      break;
+    case 'help':     eggHelp();                      break;
+    case 'ls':       eggLs(args);                    break;
+    case 'cd':       eggCd(args);                    break;
+    case 'mkdir':    eggMkdir(args);                 break;
+    case 'touch':    eggTouch(args);                 break;
+    case 'nano':     eggNanoVi(args[0], 'nano');     break;
+    case 'vi':
+    case 'vim':      eggNanoVi(args[0], 'vi');       break;
+    case 'chmod':    eggChmod(args);                 break;
+    case 'chown':    eggChown(args);                 break;
+    case 'pwd':      eggPwd();                       break;
+    case 'cat':      eggCat(args);                   break;
+    case 'rm':       eggRm(args);                    break;
+    case 'whoami':   eggWhoami();                    break;
+    case 'uname':    eggUname(args);                 break;
+    case 'clear':    eggClear();                     break;
   }
 }
 
@@ -1367,11 +1398,28 @@ function eggHelp() {
     <span style="color:#00ff41">hack</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hollywood hacking sequence
     <span style="color:#00ff41">help</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This page
 
+<span style="color:#ffffff">FILESYSTEM</span>
+    <span style="color:#00ff41">ls</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List files &nbsp;&nbsp;<span style="color:#888">ls -la</span> for long format
+    <span style="color:#00ff41">cat</span> &lt;file&gt;&nbsp;&nbsp;&nbsp;Print file contents
+    <span style="color:#00ff41">nano</span> &lt;file&gt;&nbsp;&nbsp;Open fake text editor (saves as &lt;CORRUPTED&gt;)
+    <span style="color:#00ff41">vi</span> &lt;file&gt;&nbsp;&nbsp;&nbsp;&nbsp;Like nano but with existential weight
+    <span style="color:#00ff41">touch</span> &lt;f&gt;&nbsp;&nbsp;&nbsp;Create a file &nbsp;&nbsp;<span style="color:#888">ls to see it</span>
+    <span style="color:#00ff41">mkdir</span> &lt;d&gt;&nbsp;&nbsp;&nbsp;Create a directory
+    <span style="color:#00ff41">rm</span> &lt;file&gt;&nbsp;&nbsp;&nbsp;Delete a file &nbsp;&nbsp;<span style="color:#888">rm -rf node_modules</span> if you dare
+    <span style="color:#00ff41">cd</span> &lt;dir&gt;&nbsp;&nbsp;&nbsp;&nbsp;Go somewhere (you won't)
+    <span style="color:#00ff41">pwd</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Print working directory
+    <span style="color:#00ff41">chmod</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Change permissions (lol no)
+    <span style="color:#00ff41">chown</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Change ownership (also no)
+    <span style="color:#00ff41">whoami</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...are you sure?
+    <span style="color:#00ff41">uname -a</span>&nbsp;&nbsp;&nbsp;&nbsp;System information
+    <span style="color:#00ff41">clear</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clear the screen
+
 <span style="color:#ffffff">USAGE</span>
     Start typing anywhere on the page.
     A prompt appears in the bottom-left corner.
     Press ENTER to execute. ESC to cancel.
-    Buffer clears after 3 seconds of inactivity.
+    Buffer clears after 5 seconds of inactivity.
+    Commands support arguments: &lt;space&gt;, <span style="color:#888">-flags</span>, <span style="color:#888">.dotfiles</span>
 
 <span style="color:#7c70da">HELP(1)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hidden Commands&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HELP(1)</span>
 
@@ -1379,6 +1427,544 @@ function eggHelp() {
 `;
   ov.appendChild(pre);
   onceKeyDismiss(ov);
+}
+
+// ── FAKE FILESYSTEM ──────────────────────────────────────────────────────────
+
+function fmtMtime(date) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const m   = months[date.getMonth()];
+  const d   = String(date.getDate()).padStart(2, ' ');
+  const h   = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${m} ${d} ${h}:${min}`;
+}
+
+function initFs() {
+  if (state.fsFiles) return;
+  const now = fmtMtime(new Date());
+  state.fsFiles = new Map([
+    ['.git',         { type: 'dir',  perms: 'drwx------', links: 2,   owner: 'jared', group: 'staff', size: 64,     mtime: 'Apr 15 09:11', dot: true }],
+    ['.ssh',         { type: 'dir',  perms: 'drwx------', links: 2,   owner: 'jared', group: 'staff', size: 64,     mtime: 'Mar 22 11:45', dot: true }],
+    ['.bashrc',      { type: 'file', perms: '-rw-------', links: 1,   owner: 'jared', group: 'staff', size: 1337,   mtime: 'Apr  1 00:00', dot: true }],
+    ['.env',         { type: 'file', perms: '-rw-------', links: 1,   owner: 'jared', group: 'staff', size: 42,     mtime: 'Apr  1 00:00', dot: true }],
+    ['about.txt',    { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 12480,  mtime: now }],
+    ['index.html',   { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 58392,  mtime: now }],
+    ['main.js',      { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 21043,  mtime: now }],
+    ['node_modules', { type: 'dir',  perms: 'drwxr-xr-x', links: 999, owner: 'root',  group: 'root',  size: 999999, mtime: 'Dec 31  1969' }],
+    ['resume.pdf',   { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 485291, mtime: 'Apr 28 10:00' }],
+    ['resume.txt',   { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 9001,   mtime: 'May  1 08:00' }],
+    ['skills.cfg',   { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 2048,   mtime: 'May  1 08:00' }],
+    ['style.css',    { type: 'file', perms: '-rw-r--r--', links: 1,   owner: 'jared', group: 'staff', size: 22053,  mtime: now }],
+  ]);
+}
+
+function fsLongLine(_name, entry) {
+  const links = String(entry.links || 1).padStart(3);
+  const owner = (entry.owner || 'jared').padEnd(6);
+  const group = (entry.group || 'staff').padEnd(6);
+  const size  = String(entry.size  || 0).padStart(7);
+  return `${entry.perms} ${links} ${owner} ${group} ${size} ${entry.mtime}`;
+}
+
+// ── LS ────────────────────────────────────────────────────────────────────────
+
+function eggLs(args) {
+  initFs();
+  const flagStr  = args.filter(a => a.startsWith('-')).map(a => a.slice(1)).join('');
+  const showAll  = flagStr.includes('a');
+  const showLong = flagStr.includes('l');
+  const cmdStr   = `ls${args.length ? ' ' + args.join(' ') : ''}`;
+
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text egg-ls-pre';
+  ov.appendChild(pre);
+
+  const entries = [...state.fsFiles.entries()];
+  const dots    = entries.filter(([n]) => n.startsWith('.'));
+  const regular = entries.filter(([n]) => !n.startsWith('.'));
+  regular.sort(([a], [b]) => a.localeCompare(b));
+  dots.sort(([a], [b]) => a.localeCompare(b));
+
+  if (showLong) {
+    let html = `<span style="color:#888">jared@ratner.me:~$ ${cmdStr}</span>\n\ntotal 1337\n`;
+    const dirColor = '#7c70da';
+    const dotColor = '#888888';
+
+    const addLine = (name, entry, displayName) => {
+      const prefix = fsLongLine(name, entry);
+      const isDir  = entry.type === 'dir';
+      const isDot  = entry.dot || name.startsWith('.');
+      const nameHtml = isDir
+        ? `<span style="color:${dirColor}">${displayName}</span>`
+        : isDot
+          ? `<span style="color:${dotColor}">${displayName}</span>`
+          : displayName;
+      html += `${prefix} ${nameHtml}\n`;
+    };
+
+    addLine('.', { type: 'dir', perms: 'drwxr-xr-x', links: 9,   owner: 'jared', group: 'staff', size: 288,  mtime: 'May  3 14:22' }, '.');
+    addLine('..', { type: 'dir', perms: 'drwxr-xr-x', links: 4,  owner: 'root',  group: 'wheel', size: 4096, mtime: 'Jan  1  2038' }, '..');
+
+    for (const [name, entry] of dots)    addLine(name, entry, name);
+    for (const [name, entry] of regular) addLine(name, entry, name);
+
+    html += `\n<span style="color:#2020a0">[ press any key ]</span>`;
+    pre.innerHTML = html;
+  } else {
+    const visible = (showAll ? [...dots, ...regular] : regular).map(([n, e]) => {
+      const isDir = e.type === 'dir';
+      return isDir
+        ? `<span style="color:#7c70da">${n}/</span>`
+        : n;
+    });
+    const header = `<span style="color:#888">jared@ratner.me:~$ ${cmdStr}</span>\n\n`;
+    pre.innerHTML = header + visible.join('  ') + `\n\n<span style="color:#2020a0">[ press any key ]</span>`;
+  }
+
+  onceKeyDismiss(ov);
+}
+
+// ── DOTFILE ERROR ─────────────────────────────────────────────────────────────
+
+async function eggDotfileError(filename, cmd) {
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#ff4444';
+  ov.appendChild(pre);
+
+  pre.textContent = `bash: ${cmd}: ${filename}: Permission denied\n`;
+  await new Promise(r => setTimeout(r, 800));
+  pre.textContent += `\nHint: try  sudo ${cmd} ${filename}\n`;
+  await new Promise(r => setTimeout(r, 1200));
+  pre.textContent += `\n...actually, sudo won't help here.\n`;
+  await new Promise(r => setTimeout(r, 700));
+  pre.textContent += `This file is protected by something older than root.\n`;
+  await new Promise(r => setTimeout(r, 600));
+  pre.textContent += `Something hungry.\n`;
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── CD ────────────────────────────────────────────────────────────────────────
+
+async function eggCd(args) {
+  const target = args[0] || '~';
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#00ff41';
+  ov.appendChild(pre);
+
+  const responses = {
+    '~':           "You're already home.\n(Are you ever truly home?)",
+    '..':          "cd: ..: You can't leave. There is only this terminal.",
+    '/':           "cd: /: You don't have a physical form. You cannot go here.",
+    '/etc':        "cd: /etc: Permission denied. (Also — this is a website.)",
+    '/home':       "cd: /home: jared is NOT home right now. Please try again later.",
+    '/home/jared': "cd: /home/jared: jared is NOT home right now. Please try again later.",
+    'node_modules':"cd: node_modules: Are you SURE? This path is 47 levels deep\nand still growing. Estimated traversal time: your entire career.",
+    '.git':        "cd: .git: You don't want to go here. Trust me. Nobody goes there.",
+    '.ssh':        "cd: .ssh: Nice try.",
+    '.env':        "cd: .env: That's not a directory. That's a crime scene.",
+  };
+
+  const msg = responses[target] || `cd: ${target}: No such file or directory`;
+  pre.textContent = `jared@ratner.me:~$ cd ${target}\nbash: ${msg}\n`;
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── MKDIR ─────────────────────────────────────────────────────────────────────
+
+async function eggMkdir(args) {
+  initFs();
+  const name = args[0];
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  ov.appendChild(pre);
+
+  if (!name) {
+    pre.style.color = '#ff4444';
+    pre.textContent = 'mkdir: missing operand\nUsage: mkdir <dirname>';
+    await new Promise(r => setTimeout(r, 2000));
+    removeOverlay();
+    return;
+  }
+
+  pre.textContent = `jared@ratner.me:~$ mkdir ${name}\n`;
+  if (state.fsFiles.has(name)) {
+    pre.style.color = '#ff4444';
+    pre.textContent += `mkdir: cannot create directory '${name}': File exists`;
+  } else {
+    state.fsFiles.set(name, {
+      type: 'dir', perms: 'drwxr-xr-x', links: 2,
+      owner: 'jared', group: 'staff', size: 64, mtime: fmtMtime(new Date()),
+    });
+    pre.style.color = '#00ff41';
+    pre.textContent += `jared@ratner.me:~$ `;
+  }
+
+  await new Promise(r => setTimeout(r, 1500));
+  removeOverlay();
+}
+
+// ── TOUCH ─────────────────────────────────────────────────────────────────────
+
+async function eggTouch(args) {
+  initFs();
+  const name = args[0];
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  ov.appendChild(pre);
+
+  if (!name) {
+    pre.style.color = '#ff4444';
+    pre.textContent = 'touch: missing file operand\nUsage: touch <filename>';
+    await new Promise(r => setTimeout(r, 2000));
+    removeOverlay();
+    return;
+  }
+
+  if (!state.fsFiles.has(name)) {
+    state.fsFiles.set(name, {
+      type: 'file', perms: '-rw-r--r--', links: 1,
+      owner: 'jared', group: 'staff', size: 0, mtime: fmtMtime(new Date()),
+    });
+  }
+
+  pre.style.color = '#00ff41';
+  pre.textContent = `jared@ratner.me:~$ touch ${name}\njared@ratner.me:~$ `;
+  await new Promise(r => setTimeout(r, 1200));
+  removeOverlay();
+}
+
+// ── NANO / VI ─────────────────────────────────────────────────────────────────
+
+function eggNanoVi(filename, editorType) {
+  initFs();
+  const isVi = editorType === 'vi';
+
+  if (!filename) {
+    const ov  = makeOverlay('#000');
+    const pre = document.createElement('pre');
+    pre.className = 'egg-text';
+    pre.style.color = '#ff4444';
+    pre.textContent = `${editorType}: missing filename`;
+    ov.appendChild(pre);
+    setTimeout(removeOverlay, 2000);
+    return;
+  }
+
+  if (filename.startsWith('.')) {
+    eggDotfileError(filename, editorType);
+    return;
+  }
+
+  const entry = state.fsFiles.get(filename);
+  if (entry && entry.corrupted) {
+    const hexDump = Array.from({ length: 24 }, () =>
+      Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
+    ).join(' ');
+    const ov  = makeOverlay('#000');
+    const pre = document.createElement('pre');
+    pre.className = 'egg-text';
+    pre.style.cssText = 'color:#ff4444;padding:40px;';
+    pre.textContent = `  "${filename}"  1 line  11 characters\n\n  <CORRUPTED>\n\n  ${hexDump}\n\n  This file cannot be recovered.`;
+    ov.appendChild(pre);
+    onceKeyDismiss(ov);
+    return;
+  }
+
+  const ov = makeOverlay('#000');
+  ov.style.cssText = 'display:flex;flex-direction:column;';
+
+  const header = document.createElement('div');
+  header.className = 'egg-editor-header';
+  header.textContent = isVi
+    ? `"${filename}" [New File]`
+    : `  GNU nano 7.2               ${filename}`;
+  ov.appendChild(header);
+
+  const body = document.createElement('pre');
+  body.className = 'egg-editor-body';
+  ov.appendChild(body);
+
+  const statusBar = document.createElement('div');
+  statusBar.className = 'egg-editor-status';
+  statusBar.innerHTML = isVi
+    ? `<span class="egg-editor-mode">-- INSERT --</span>&nbsp;&nbsp;&nbsp;ESC to save and exit`
+    : `<span class="egg-editor-mode">^X</span> Exit&nbsp;&nbsp;&nbsp;<span class="egg-editor-mode">^O</span> Write Out&nbsp;&nbsp;&nbsp;<span class="egg-editor-mode">^W</span> Where Is&nbsp;&nbsp;&nbsp;<span class="egg-editor-mode">^K</span> Cut`;
+  ov.appendChild(statusBar);
+
+  let editorBuffer = '';
+
+  const updateBody = () => {
+    body.textContent = editorBuffer || (isVi ? '\n~\n~\n~\n~\n~\n~' : '');
+  };
+  updateBody();
+
+  const triggerSave = async () => {
+    document.removeEventListener('keydown', keyHandler, true);
+    const lines = editorBuffer.split('\n').length;
+    statusBar.innerHTML = `<span class="egg-editor-mode"> Writing... Done. (${lines} line${lines !== 1 ? 's' : ''}) </span>`;
+    if (!state.fsFiles.has(filename)) {
+      state.fsFiles.set(filename, {
+        type: 'file', perms: '-rw-r--r--', links: 1,
+        owner: 'jared', group: 'staff', size: editorBuffer.length, mtime: fmtMtime(new Date()),
+      });
+    }
+    state.fsFiles.get(filename).corrupted = true;
+    await new Promise(r => setTimeout(r, 900));
+    removeOverlay();
+  };
+
+  const keyHandler = e => {
+    e.stopPropagation();
+    if (isVi) {
+      if (e.key === 'Escape') { triggerSave(); return; }
+    } else {
+      if ((e.ctrlKey && e.key === 'x') || e.key === 'Escape') { triggerSave(); return; }
+    }
+    if (e.key === 'Backspace')    { editorBuffer = editorBuffer.slice(0, -1); }
+    else if (e.key === 'Enter')   { editorBuffer += '\n'; }
+    else if (e.key.length === 1)  { editorBuffer += e.key; }
+    updateBody();
+  };
+
+  document.addEventListener('keydown', keyHandler, true);
+}
+
+// ── CHMOD ─────────────────────────────────────────────────────────────────────
+
+async function eggChmod(args) {
+  const mode = args[0];
+  const file = args[1];
+  const ov   = makeOverlay('#000');
+  const pre  = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#ff4444';
+  ov.appendChild(pre);
+
+  pre.textContent = `jared@ratner.me:~$ chmod ${args.join(' ')}\n`;
+  await new Promise(r => setTimeout(r, 400));
+
+  const msgs = {
+    '777': `chmod: changing permissions of '${file || 'file'}': Operation not permitted\n(Protected by corporate policy, union rules, and ancient dark magic.)`,
+    '000': `chmod: changing permissions of '${file || 'file'}': Making this more inaccessible would cause a paradox.`,
+    '600': `chmod: changing permissions of '${file || 'file'}': Already as private as it's going to get.`,
+  };
+  pre.textContent += (msgs[mode] || `chmod: changing permissions of '${file || 'file'}': lol no`) + '\n';
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── CHOWN ─────────────────────────────────────────────────────────────────────
+
+async function eggChown(args) {
+  const newOwner = args[0];
+  const file     = args[1];
+  const ov   = makeOverlay('#000');
+  const pre  = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#ff4444';
+  ov.appendChild(pre);
+
+  pre.textContent = `jared@ratner.me:~$ chown ${args.join(' ')}\n`;
+  await new Promise(r => setTimeout(r, 400));
+
+  const msg = newOwner === 'root'
+    ? `chown: changing ownership of '${file || 'file'}': Are you the Chosen One? Prophecy says no.`
+    : `chown: changing ownership of '${file || 'file'}': Permission denied\n(jared is the only owner here. forever.)`;
+  pre.textContent += msg + '\n';
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── PWD ───────────────────────────────────────────────────────────────────────
+
+async function eggPwd() {
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#00ff41';
+  ov.appendChild(pre);
+
+  pre.textContent = 'jared@ratner.me:~$ pwd\n';
+  await new Promise(r => setTimeout(r, 300));
+  pre.textContent += '/home/jared/universe/earth/internet/ratner.me/~\n';
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── CAT ───────────────────────────────────────────────────────────────────────
+
+const CAT_CONTENT = {
+  'about.txt':  '# jared ratner\ncloud engineer\nthe kind of person who automates their coffee order\nmy editor is vim and i will die on this hill',
+  'main.js':    '// this is the one file.\n// everything lives here.\n// do not question it.',
+  'style.css':  '/* it\'s all CRT green and nostalgia */\n/* yes, every color was chosen on purpose */\n/* no, i will not apologize */  ',
+  'index.html': '<!DOCTYPE html>\n<!-- welcome. you\'re already inside. -->\n<!-- please wipe your feet. -->',
+  'resume.pdf': 'bash: cat: resume.pdf: binary file (use xdg-open or just click the link above)',
+  'resume.txt': 'NAME: Jared Ratner\nOCCUPATION: Cloud Engineer / Terminal Architect\nSKILLS: Bash, Python, Terraform, Kubernetes, Overthinking\nHOBBIES: Automating things that didn\'t need automating\nREFERENCES: Available upon kubectl get pod -A',
+  'skills.cfg': '[languages]\npython=true\nbash=true\njavascript=true\nyaml=unfortunately\n\n[superpowers]\ndebugging_at_3am=true\nterraform_cursing=occasionally\ncommit_message_quality=debatable',
+};
+
+async function eggCat(args) {
+  initFs();
+  const name = args[0];
+
+  if (!name) {
+    const ov  = makeOverlay('#000');
+    const pre = document.createElement('pre');
+    pre.className = 'egg-text';
+    pre.style.color = '#ff4444';
+    pre.textContent = 'cat: missing operand\nUsage: cat <filename>';
+    ov.appendChild(pre);
+    await new Promise(r => setTimeout(r, 2000));
+    removeOverlay();
+    return;
+  }
+
+  if (name.startsWith('.')) {
+    await eggDotfileError(name, 'cat');
+    return;
+  }
+
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  ov.appendChild(pre);
+
+  pre.textContent = `jared@ratner.me:~$ cat ${name}\n`;
+  await new Promise(r => setTimeout(r, 300));
+
+  const entry = state.fsFiles.get(name);
+  if (!entry) {
+    pre.style.color = '#ff4444';
+    pre.textContent += `cat: ${name}: No such file or directory`;
+  } else if (entry.corrupted) {
+    pre.style.color = '#ff4444';
+    pre.textContent += '<CORRUPTED>';
+  } else if (CAT_CONTENT[name]) {
+    pre.style.color = '#00ff41';
+    pre.textContent += CAT_CONTENT[name];
+  } else {
+    pre.style.color = '#888';
+    pre.textContent += '(empty file)';
+  }
+
+  await new Promise(r => setTimeout(r, 3000));
+  removeOverlay();
+}
+
+// ── RM ────────────────────────────────────────────────────────────────────────
+
+async function eggRm(args) {
+  initFs();
+  const flags   = args.filter(a => a.startsWith('-')).join('');
+  const targets = args.filter(a => !a.startsWith('-'));
+  const name    = targets[0];
+
+  if (!name) {
+    const ov  = makeOverlay('#000');
+    const pre = document.createElement('pre');
+    pre.className = 'egg-text';
+    pre.style.color = '#ff4444';
+    pre.textContent = 'rm: missing operand\nUsage: rm [-rf] <file>';
+    ov.appendChild(pre);
+    await new Promise(r => setTimeout(r, 2000));
+    removeOverlay();
+    return;
+  }
+
+  if (name.startsWith('.')) {
+    await eggDotfileError(name, 'rm');
+    return;
+  }
+
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  ov.appendChild(pre);
+
+  if (name === 'node_modules' && /[rf]/.test(flags)) {
+    pre.style.color = '#00ff41';
+    pre.textContent = `jared@ratner.me:~$ rm ${args.join(' ')}\n`;
+    const counts = [1, 42, 314, 2718, 31415, '∞'];
+    for (const c of counts) {
+      await new Promise(r => setTimeout(r, 380));
+      pre.textContent += `Deleting... (${c} files)\n`;
+    }
+    await new Promise(r => setTimeout(r, 500));
+    pre.textContent += '\nestimated completion: heat death of universe\n';
+    await new Promise(r => setTimeout(r, 3000));
+    removeOverlay();
+    return;
+  }
+
+  const existed = state.fsFiles.has(name);
+  if (existed) state.fsFiles.delete(name);
+
+  pre.textContent = `jared@ratner.me:~$ rm ${args.join(' ')}\n`;
+  await new Promise(r => setTimeout(r, 300));
+
+  if (existed) {
+    pre.style.color = '#00ff41';
+    pre.textContent += `removed '${name}'\njared@ratner.me:~$ `;
+  } else {
+    pre.style.color = '#ff4444';
+    pre.textContent += `rm: cannot remove '${name}': No such file or directory`;
+  }
+
+  await new Promise(r => setTimeout(r, 2000));
+  removeOverlay();
+}
+
+// ── WHOAMI ────────────────────────────────────────────────────────────────────
+
+async function eggWhoami() {
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#00ff41';
+  ov.appendChild(pre);
+
+  pre.textContent = 'jared@ratner.me:~$ whoami\njared\n';
+  await new Promise(r => setTimeout(r, 1000));
+  pre.textContent += '\n(are you sure about that?)\n';
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── UNAME ─────────────────────────────────────────────────────────────────────
+
+async function eggUname(args) {
+  const ov  = makeOverlay('#000');
+  const pre = document.createElement('pre');
+  pre.className = 'egg-text';
+  pre.style.color = '#00ff41';
+  ov.appendChild(pre);
+
+  const full = args.join('').includes('a');
+  pre.textContent = `jared@ratner.me:~$ uname ${args.join(' ')}\n`;
+  await new Promise(r => setTimeout(r, 300));
+  pre.textContent += full
+    ? 'ratner-OS 9000.1 #1 SMP PREEMPT built-from-vibes x86_64 ratner.me GNU/coffee'
+    : 'ratner-OS';
+  await new Promise(r => setTimeout(r, 2500));
+  removeOverlay();
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────────────────────
+
+function eggClear() {
+  makeOverlay('#000');
+  setTimeout(removeOverlay, 200);
 }
 
 // ── KEYBOARD HANDLER ─────────────────────────────────────────────────────────
@@ -1475,4 +2061,5 @@ export {
   delay, typeText,
   renderMenu, syncMenuCursor,
   runBoot,
+  initFs, runEgg,
 };

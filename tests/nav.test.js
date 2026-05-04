@@ -196,7 +196,7 @@ describe('syncMenuCursor()', () => {
 describe('state shape', () => {
   it('has the expected initial keys', () => {
     const keys = ['mode', 'bootAborted', 'menuIndex', 'projectIndex', 'expandedProject',
-                  'skillsActive', 'eggBuffer', 'eggTimer', 'eggOverlay', 'prevMode'];
+                  'skillsActive', 'eggBuffer', 'eggTimer', 'eggOverlay', 'prevMode', 'fsFiles'];
     for (const key of keys) {
       assert.ok(key in state, `state missing key: ${key}`);
     }
