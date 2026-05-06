@@ -170,7 +170,7 @@ async function sectionContact() {
     { label: 'Email',    val: `<a href="mailto:jared.ratner2@gmail.com" rel="noopener">jared.ratner2@gmail.com</a>` },
     { label: 'GitHub',   val: `<a href="${GITHUB_URL}" target="_blank" rel="noopener">${GITHUB_URL}</a>` },
     { label: 'LinkedIn', val: `<a href="${LINKEDIN_URL}" target="_blank" rel="noopener">${LINKEDIN_URL}</a>` },
-    { label: 'Location', val: '153 Boylston St #1, Boston, MA' },
+    { label: 'Location', val: '250 Totoket Rd North Branford, CT 06471' },
     { label: 'Status',   val: '<span class="status-available">AVAILABLE FOR OPPORTUNITIES</span>' },
   ];
 
